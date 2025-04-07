@@ -16,7 +16,7 @@ export default function Publications() {
         {publications.map((pub, index) => (
           <li key={index} className="flex">
             <div className="w-16">{pub.year}</div>
-            <div>"{pub.title}"</div>
+            <div>&quot;{pub.title}&quot;</div>
           </li>
         ))}
       </ul>

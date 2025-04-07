@@ -2,7 +2,7 @@ export default function About() {
   return (
     <div className="max-w-3xl">
       <p className="mb-4">
-        I'm a physics PhD student studying the application of novel optical techniques to study emergent phenomena and exotic phases of matter in quantum materials.
+        I&apos;m a physics PhD student studying the application of novel optical techniques to study emergent phenomena and exotic phases of matter in quantum materials.
       </p>
       
       <p className="mb-4">
