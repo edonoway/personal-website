@@ -3,6 +3,7 @@ import { Lato } from "next/font/google";
 import "./globals.css";
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+// import ToggleMenu from '../components/ToggleMenu';
 
 const lato = Lato({
   weight: ["400"],
@@ -29,6 +30,9 @@ export default function RootLayout({
             <div className="hidden md:block">
               <Navbar />
             </div>
+            {/* <div className="block md:hidden">
+              <ToggleMenu />
+            </div> */}
             <main className="p-4 md:p-8">{children}</main>
           </div>
         </div>

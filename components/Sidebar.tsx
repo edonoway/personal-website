@@ -35,7 +35,7 @@ const Sidebar = () => {
           elizabeth donoway
         </Link>
         
-        <nav className="mt-8 hidden md:block">
+        <nav className="mt-8 md:block">
           <ul className="space-y-4">
             {navigation.map((item) => (
               <li key={item.name}>
