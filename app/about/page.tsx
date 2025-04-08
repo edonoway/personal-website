@@ -6,7 +6,7 @@ export default function About() {
       </p>
       
       <p className="mb-4">
-      Prior to this, I designed and applied novel optical techniques to study emergent phenomena and exotic phases of matter in quantum materials. My research focused on how light and material systems interact when they are affected by polarization and magnetic field, and I used various optical techniques at the visible and near-infrared regions to study emergent phenomena in strongly correlated electron systems.
+      Prior to this, I developed and applied novel optical techniques to study emergent phenomena and exotic phases of matter in quantum materials. My research focused on how light and material systems interact when they are affected by polarization and magnetic field, and I used various optical techniques at the visible and near-infrared regions to study emergent phenomena in strongly correlated electron systems.
       </p>
       
       <p className="mb-4">
