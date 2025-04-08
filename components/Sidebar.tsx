@@ -1,11 +1,18 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Lato } from "next/font/google";
 
 interface NavItem {
   name: string;
   href: string;
 }
+
+const lato = Lato({
+  weight: ["100", "300", "400", "700", "900"],
+  style: ["normal", "italic"], 
+  subsets: ["latin"],
+});
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -22,7 +29,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-full md:w-64 bg-white md:min-h-screen md:border-r border-gray-200">
+    <div className={`w-full md:w-64 bg-white md:min-h-screen md:border-r border-gray-200 ${lato.className}`}>
       <div className="p-4 md:p-8">
         <Link href="/" className="text-xl">
           elizabeth donoway
@@ -34,7 +41,7 @@ const Sidebar = () => {
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className={`block text-sm ${pathname === item.href ? 'font-medium' : 'font-normal'} hover:text-gray-600`}
+                  className={`block text-sm ${pathname === item.href ? 'font-bold' : 'font-normal'} hover:text-gray-600`}
                 >
                   {item.name}
                 </Link>

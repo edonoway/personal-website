@@ -1,6 +1,13 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Lato } from "next/font/google";
+
+const lato = Lato({
+  weight: ["100", "300", "400", "700", "900"],
+  style: ["normal", "italic"], 
+  subsets: ["latin"],
+});
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -17,19 +24,19 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="py-4 px-8 border-b border-gray-200">
+    <nav className={`py-4 px-8 border-b border-gray-200 ${lato.className}`}>
       <Link href="/" className="text-xl mr-12">
         elizabeth donoway
       </Link>
       <ul className="inline-flex space-x-6">
         {navigation.map((item) => (
           <li key={item.name}>
-            <Link 
-              href={item.href}
-              className={`${pathname === item.href ? 'font-medium' : 'font-normal'} hover:text-gray-600`}
-            >
-              {item.name}
-            </Link>
+        <Link 
+          href={item.href}
+          className={`${pathname === item.href ? 'font-bold' : 'font-normal'} hover:text-gray-600`}
+        >
+          {item.name}
+        </Link>
           </li>
         ))}
       </ul>
