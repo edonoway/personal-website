@@ -8,6 +8,7 @@ export default function CV() {
         <br></br>
         <p><b>Cornell University</b></p>
         <p>Bachelor of Arts, Physics</p>
+        <p><i>Magna Cum Laude, Phi Beta Kappa</i></p>
       </section>
       
       <section className="mb-8">
@@ -58,7 +59,10 @@ export default function CV() {
       
       <section className="mb-8">
         <h2 className="mb-4 text-lg"><b><u>skills</u></b></h2>
-        <p>To do</p>
+        <p>Programming: Python, Mathematica, MATLAB</p>
+        <p>ML Frameworks/Libraries: PyTorch, Hugging Face, TensorFlow/Keras, scikit-learn</p>
+        <p>ML Skills: LLM training at scale (fine-tuning, RLHF, pretraining), PEFT, large-scale dataset curation</p>
+        <p>Operating systems: Linux, macOS</p>
       </section>
     </div>
   );

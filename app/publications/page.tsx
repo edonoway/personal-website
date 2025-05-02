@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 export default function Publications() {
   const publications = [
     {
@@ -74,6 +76,11 @@ export default function Publications() {
           </li>
         ))}
       </ul>
+      <div className="mt-4 flex space-x-4 space-y-8">
+        <Link href="https://scholar.google.com/citations?hl=en&view_op=list_works&gmla=AOAOcb0a27dcGZjv5oS4kvjQ_rZWlRpOuX1jzmkwbefPu8z8wug8ja6QLMNLZj8uaYLdAfHXpe_alK85drvjRg&user=--aukLAAAAAJ" aria-label="Google Scholar">
+          <Image src="/google-scholar.svg" alt="Google Scholar" width={30} height={30} className="opacity-30 hover:opacity-90" />
+        </Link>
+      </div>
     </div>
   );
 }

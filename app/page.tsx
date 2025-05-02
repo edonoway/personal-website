@@ -13,7 +13,10 @@ export default function Home() {
   return (
     <div className={`max-w-3xl ${lato.className}`}>
       <p className="mb-4 font-regular font-[400]">
-        i&apos;m elizabeth, a phd fellow in physics at uc berkeley. i use optical techniques to study emergent phenomena and exotic phases of matter in quantum materials.
+        I&lsquo;m Elizabeth, an Anthropic Fellow working with Jan Leike on quantifying elicitation and learning in LLMs. I use information theoretic approaches combined with interventions on model internals to understand and formalize what it means to elicit latent capabilities in language models vs. teach entirely new skills that are absent following pretraining. I previously did MATS with Marius Hobbhahn creating evals of long-horizon goal-directedness in LLMs and LLM agents. Prior to that, I developed evals to assess LLMs&lsquo; physical reasoning skills as part of BIG Bench.
+
+        I&lsquo;m also finishing a physics PhD in Mike DeWeese&lsquo;s group at UC Berkeley using techniques from statistical mechanics to understand how machines learn. I&lsquo;m grateful to be supported by both NSF GRFP and Ford fellowships. I previously spent a good deal of time trying to find and describe exotic phases of matter in quantum systems.
+        {/* I previously spent a long time using optical techniques to study emergent phenomena and exotic phases of matter in quantum materials. */}
       </p>
     </div>
   );

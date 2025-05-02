@@ -13,10 +13,10 @@ export default function Conferences() {
       url: "https://ui.adsabs.harvard.edu/abs/2023APS..MARQ56004D/abstract"
     },
     {
-      year: "2021",
+      year: "2022",
       title: "Emergent topological phase transition dynamics of polar skyrmions",
       conference: "MRS Spring Meeting",
-      url: "https://ui.adsabs.harvard.edu/abs/2021APS..MARY55003D/abstract"
+      url: "https://www.mrs.org/meetings-events/annual-meetings/archive/meeting/presentations/view/2022-mrs-spring-meeting/2022-mrs-spring-meeting-3676274"
     },
     {
       year: "",
