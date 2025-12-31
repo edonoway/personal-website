@@ -1,6 +1,12 @@
 export default function Conferences() {
   const conferences = [
     {
+      year: "2025",
+      title: "Quantifying Elicitation of Latent Capabilities in Language Models",
+      conference: "Neural Information Processing Systems (NeurIPS)",
+      url: "https://neurips.cc/virtual/2025/loc/san-diego/poster/119197"
+    },
+    {
       year: "2024",
       title: "Symmetry-breaking pathways to the broken helix",
       conference: "APS March Meeting",
