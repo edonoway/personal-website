@@ -4,6 +4,12 @@ export default function Publications() {
   const publications = [
     {
       year: "2025",
+      title: "Quantifying Elicitation of Latent Capabilities in Language Models",
+      journal: "Neural Information Processing Systems (NeurIPS)",
+      url: "https://openreview.net/pdf?id=Dkgx2pS4Ww"
+    },
+    {
+      year: "2025",
       title: "Hidden domain boundary dynamics toward crystalline perfection",
       journal: "Proceedings of the National Academy of Sciences",
       url: "https://www.pnas.org/doi/abs/10.1073/pnas.2407772122"
