@@ -3,13 +3,19 @@ import Link from "next/link";
 export default function Publications() {
   const publications = [
     {
+      year: "2026",
+      title: "Excess Description Length of Learning Generalizable Predictors",
+      journal: "arXiv Preprint (arXiv:2601.04728)",
+      url: "https://arxiv.org/abs/2601.04728v1"
+    },
+    {
       year: "2025",
       title: "Quantifying Elicitation of Latent Capabilities in Language Models",
       journal: "Neural Information Processing Systems (NeurIPS)",
       url: "https://openreview.net/pdf?id=Dkgx2pS4Ww"
     },
     {
-      year: "2025",
+      year: "",
       title: "Hidden domain boundary dynamics toward crystalline perfection",
       journal: "Proceedings of the National Academy of Sciences",
       url: "https://www.pnas.org/doi/abs/10.1073/pnas.2407772122"
