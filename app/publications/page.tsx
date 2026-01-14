@@ -16,6 +16,12 @@ export default function Publications() {
     },
     {
       year: "",
+      title: "Evaluating Goal Drift in Language Model Agents",
+      journal: "Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society",
+      url: "https://ojs.aaai.org/index.php/AIES/article/view/36541"
+    },
+    {
+      year: "",
       title: "Hidden domain boundary dynamics toward crystalline perfection",
       journal: "Proceedings of the National Academy of Sciences",
       url: "https://www.pnas.org/doi/abs/10.1073/pnas.2407772122"
@@ -35,13 +41,13 @@ export default function Publications() {
     {
       year: "",
       title: "Hidden non-equilibrium pathways towards crystalline perfection",
-      journal: "ArXiv Preprint",
+      journal: "arXiv Preprint (arXiv:2402.04962)",
       url: "https://ui.adsabs.harvard.edu/abs/2024arXiv240204962M/abstract"
     },
     {
       year: "2023",
       title: "Symmetry-breaking pathway towards the unpinned broken helix",
-      journal: "ArXiv Preprint",
+      journal: "arXiv Preprint (arXiv:2310.16018)",
       url: "https://arxiv.org/abs/2310.16018"
     },
     {
@@ -59,7 +65,7 @@ export default function Publications() {
     {
       year: "",
       title: "Beyond the imitation game: Quantifying and extrapolating the capabilities of language models",
-      journal: "ArXiv Preprint",
+      journal: "Transactions on Machine Learning Research",
       url: "https://arxiv.org/abs/2206.04615"
     },
     {
