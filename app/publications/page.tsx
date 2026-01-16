@@ -4,6 +4,12 @@ export default function Publications() {
   const publications = [
     {
       year: "2026",
+      title: "Excess Description Length: An Information Measure for Generalizable Structure Learned from Finite Data",
+      journal: "Submitted to ISIT 2026",
+      url: "https://elizabethdonoway.com/papers/EDL_ISIT_full.pdf"
+    },
+    {
+      year: "",
       title: "Excess Description Length of Learning Generalizable Predictors",
       journal: "arXiv Preprint (arXiv:2601.04728)",
       url: "https://arxiv.org/abs/2601.04728v1"
