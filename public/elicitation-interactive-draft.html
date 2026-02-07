@@ -1110,48 +1110,51 @@
           </g>
 
           <!-- BACKFILLING VISUALIZATION -->
+          <!-- Examples above are at: Ex1@80, Ex2@265, Ex3@450 (relative to this g which is at x=15) -->
           <g transform="translate(15, 155)">
             <rect x="0" y="0" width="870" height="150" rx="8" fill="#fff8f5" stroke="#D97757" stroke-width="1"/>
             <text x="435" y="18" text-anchor="middle" font-size="11" font-weight="600" fill="#D97757">The "Backfilling" Effect: New patterns unlock information in past data</text>
 
             <!-- Column headers aligned with examples above -->
             <g transform="translate(0, 30)">
-              <text x="95" y="12" text-anchor="middle" font-size="8" fill="#666">After Ex 1</text>
-              <text x="280" y="12" text-anchor="middle" font-size="8" fill="#666">After Ex 2</text>
-              <text x="465" y="12" text-anchor="middle" font-size="8" fill="#50C878" font-weight="600">After Ex 3 (pattern!)</text>
+              <text x="80" y="12" text-anchor="middle" font-size="8" fill="#666">After Ex 1</text>
+              <text x="265" y="12" text-anchor="middle" font-size="8" fill="#666">After Ex 2</text>
+              <text x="450" y="12" text-anchor="middle" font-size="8" fill="#50C878" font-weight="600">After Ex 3 (pattern!)</text>
             </g>
 
-            <!-- Row labels and bars -->
-            <g transform="translate(20, 48)">
+            <!-- Row labels and bars - columns centered at 80, 265, 450 -->
+            <g transform="translate(0, 48)">
               <!-- Info from Ex1 row -->
-              <text x="0" y="10" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex1:</text>
-              <rect x="75" y="0" width="8" height="14" rx="2" fill="#4A90D9" opacity="0.3"/>
-              <rect x="260" y="0" width="18" height="14" rx="2" fill="#4A90D9" opacity="0.5"/>
-              <rect x="445" y="0" width="55" height="14" rx="2" fill="#4A90D9"/>
-              <text x="505" y="10" font-size="7" fill="#50C878">"It's angular → blue!"</text>
+              <text x="10" y="10" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex1:</text>
+              <rect x="75" y="0" width="10" height="14" rx="2" fill="#4A90D9" opacity="0.3"/>
+              <rect x="240" y="0" width="22" height="14" rx="2" fill="#4A90D9" opacity="0.5"/>
+              <text x="265" y="10" font-size="6" fill="#666">"square→blue"</text>
+              <rect x="425" y="0" width="55" height="14" rx="2" fill="#4A90D9"/>
+              <text x="485" y="10" font-size="6" fill="#50C878">"angular → blue!"</text>
 
               <!-- Info from Ex2 row -->
-              <text x="0" y="30" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex2:</text>
-              <text x="79" y="30" font-size="8" fill="#ccc">—</text>
-              <rect x="260" y="20" width="22" height="14" rx="2" fill="#D97757" opacity="0.5"/>
-              <rect x="445" y="20" width="60" height="14" rx="2" fill="#D97757"/>
-              <text x="510" y="30" font-size="7" fill="#50C878">"It's curved → red!"</text>
+              <text x="10" y="30" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex2:</text>
+              <text x="80" y="30" font-size="8" fill="#ccc">—</text>
+              <rect x="240" y="20" width="25" height="14" rx="2" fill="#D97757" opacity="0.5"/>
+              <text x="270" y="30" font-size="6" fill="#666">"circle→red"</text>
+              <rect x="425" y="20" width="60" height="14" rx="2" fill="#D97757"/>
+              <text x="490" y="30" font-size="6" fill="#50C878">"curved → red!"</text>
 
               <!-- Info from Ex3 row -->
-              <text x="0" y="50" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex3:</text>
-              <text x="79" y="50" font-size="8" fill="#ccc">—</text>
-              <text x="271" y="50" font-size="8" fill="#ccc">—</text>
-              <rect x="445" y="40" width="45" height="14" rx="2" fill="#D97757"/>
-              <text x="495" y="50" font-size="7" fill="#666">(new example)</text>
+              <text x="10" y="50" font-size="9" fill="#1a1a2e" font-weight="600">Info from Ex3:</text>
+              <text x="80" y="50" font-size="8" fill="#ccc">—</text>
+              <text x="265" y="50" font-size="8" fill="#ccc">—</text>
+              <rect x="425" y="40" width="45" height="14" rx="2" fill="#D97757"/>
+              <text x="475" y="50" font-size="6" fill="#666">(new example)</text>
 
               <!-- EDL per example row (bottom) -->
-              <text x="0" y="75" font-size="9" fill="#1a1a2e" font-weight="600">EDL per ex:</text>
+              <text x="10" y="75" font-size="9" fill="#1a1a2e" font-weight="600">EDL per ex:</text>
               <rect x="75" y="65" width="10" height="14" rx="2" fill="#ccc"/>
               <text x="90" y="75" font-size="7" fill="#999">~0</text>
-              <rect x="260" y="65" width="25" height="14" rx="2" fill="#E8A838"/>
-              <text x="290" y="75" font-size="7" fill="#E8A838">rising</text>
-              <rect x="445" y="65" width="70" height="14" rx="2" fill="#50C878"/>
-              <text x="520" y="75" font-size="7" fill="#50C878" font-weight="600">peak!</text>
+              <rect x="240" y="65" width="30" height="14" rx="2" fill="#E8A838"/>
+              <text x="275" y="75" font-size="7" fill="#E8A838">rising</text>
+              <rect x="425" y="65" width="70" height="14" rx="2" fill="#50C878"/>
+              <text x="500" y="75" font-size="7" fill="#50C878" font-weight="600">peak!</text>
             </g>
 
             <text x="435" y="138" text-anchor="middle" font-size="9" fill="#1a1a2e" font-style="italic">Example 3 didn't just add its own information—it made examples 1 and 2 understandable!</text>
@@ -1288,7 +1291,7 @@
       <!-- Visualization 5: One Example Is All You Need -->
       <div class="visualization" id="viz-one-example">
         <div class="viz-title">One Example Is All You Need</div>
-        <div class="viz-subtitle">Compare zero-shot vs one-shot performance. Watch how a single example transforms accuracy for models with latent capability.</div>
+        <div class="viz-subtitle">Compare zero-shot vs one-shot performance. Watch how a single example transforms accuracy on addition/subtraction problems for models with latent capability.</div>
         <div class="viz-container" id="one-example-chart"></div>
         <div class="viz-controls">
           <button id="animate-bars">Replay Animation</button>
@@ -1330,7 +1333,7 @@
       <p>Though the instruction-tuned models can output correctly-formatted responses zero-shot, their accuracies are often lower. This indicates that elicitation of the base model, in addition to aligning outputs to the task format (<em>format-specific</em> improvement), may also surface improved <em>capability-specific</em> performance. In other words, post-training and reinforcement learning from human feedback may, in some cases, have traded raw capability for instruction-following—and elicitation can recover it.</p>
     </section>
 
-    <h2>More Is Necessary?</h2>
+    <h2>More Is Necessary</h2>
 
     <section id="teaching-requirements">
       <p>When capabilities are absent, information requirements change dramatically.</p>
