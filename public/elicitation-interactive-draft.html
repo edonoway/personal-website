@@ -407,60 +407,104 @@
 
       <p>Imagine Alice has fine-tuned a language model and wants to share it with Bob. Bob already has the same base model and the same training inputs, but not the labels. Instead of sending gigabytes of weight differences, Alice could just send the labels along with instructions describing exactly how to replicate her training procedure.<sup>[1]</sup> She can even use the base model itself to communicate the labels to Bob. Bob trains his copy on them and reconstructs her model exactly.<sup>[2]</sup></p>
 
-      <!-- Alice and Bob diagram -->
+      <!-- Alice and Bob diagram: Two scenarios comparison -->
       <div class="illustration">
-        <svg viewBox="0 0 700 220" style="max-width: 700px; width: 100%; height: auto;">
-          <!-- Alice -->
-          <g transform="translate(50, 40)">
-            <circle cx="30" cy="30" r="25" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
-            <text x="30" y="35" text-anchor="middle" font-size="20">A</text>
-            <text x="30" y="75" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">Alice</text>
-            <!-- Alice's model -->
-            <rect x="-10" y="90" width="80" height="40" rx="6" fill="#1a1a2e"/>
-            <text x="30" y="115" text-anchor="middle" font-size="11" fill="white">Fine-tuned</text>
+        <svg viewBox="0 0 800 380" style="max-width: 800px; width: 100%; height: auto;">
+          <!-- Scenario 1: Sending weights (bad) -->
+          <g transform="translate(0, 0)">
+            <rect x="10" y="10" width="380" height="160" rx="8" fill="#fef6f6" stroke="#c66" stroke-width="1" stroke-dasharray="4,2"/>
+            <text x="200" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#c66">Option 1: Send the weights</text>
+
+            <!-- Alice -->
+            <g transform="translate(40, 50)">
+              <circle cx="25" cy="25" r="20" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
+              <text x="25" y="30" text-anchor="middle" font-size="16">A</text>
+              <text x="25" y="60" text-anchor="middle" font-size="10" fill="#1a1a2e">Alice</text>
+            </g>
+
+            <!-- Huge file -->
+            <g transform="translate(120, 45)">
+              <rect x="0" y="0" width="120" height="70" rx="4" fill="#1a1a2e"/>
+              <text x="60" y="25" text-anchor="middle" font-size="9" fill="white">Weight Diff</text>
+              <text x="60" y="42" text-anchor="middle" font-size="14" fill="#D97757" font-weight="bold">4.2 GB</text>
+              <text x="60" y="58" text-anchor="middle" font-size="8" fill="#999">billions of floats</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 250 80 L 300 80" stroke="#c66" stroke-width="2"/>
+            <polygon points="300,80 290,74 290,86" fill="#c66"/>
+
+            <!-- Bob -->
+            <g transform="translate(320, 50)">
+              <circle cx="25" cy="25" r="20" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
+              <text x="25" y="30" text-anchor="middle" font-size="16">B</text>
+              <text x="25" y="60" text-anchor="middle" font-size="10" fill="#1a1a2e">Bob</text>
+            </g>
+
+            <!-- X mark -->
+            <text x="200" y="145" text-anchor="middle" font-size="11" fill="#c66">Slow! Takes hours to transfer...</text>
           </g>
 
-          <!-- Communication channel -->
-          <g transform="translate(150, 80)">
-            <!-- Arrow with bits -->
-            <path d="M 0 50 L 280 50" stroke="#D97757" stroke-width="3" stroke-dasharray="8,4"/>
-            <polygon points="280,50 265,42 265,58" fill="#D97757"/>
-            <!-- Bits label -->
-            <rect x="100" y="25" width="80" height="30" rx="15" fill="#FAF8F5" stroke="#D97757" stroke-width="2"/>
-            <text x="140" y="45" text-anchor="middle" font-size="12" fill="#D97757" font-weight="600">Labels</text>
-            <text x="140" y="85" text-anchor="middle" font-size="11" fill="#666">compressed via model predictions</text>
+          <!-- Scenario 2: Sending data (good) -->
+          <g transform="translate(410, 0)">
+            <rect x="0" y="10" width="380" height="160" rx="8" fill="#f6fef6" stroke="#5a5" stroke-width="1" stroke-dasharray="4,2"/>
+            <text x="190" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#5a5">Option 2: Send the training data</text>
+
+            <!-- Alice -->
+            <g transform="translate(30, 50)">
+              <circle cx="25" cy="25" r="20" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
+              <text x="25" y="30" text-anchor="middle" font-size="16">A</text>
+              <text x="25" y="60" text-anchor="middle" font-size="10" fill="#1a1a2e">Alice</text>
+            </g>
+
+            <!-- Small file -->
+            <g transform="translate(110, 55)">
+              <rect x="0" y="0" width="80" height="50" rx="4" fill="#50C878"/>
+              <text x="40" y="20" text-anchor="middle" font-size="9" fill="white">Labels</text>
+              <text x="40" y="38" text-anchor="middle" font-size="12" fill="white" font-weight="bold">~2 MB</text>
+            </g>
+
+            <!-- Plus recipe -->
+            <g transform="translate(200, 60)">
+              <text x="0" y="20" font-size="14" fill="#666">+</text>
+              <rect x="15" y="0" width="60" height="40" rx="4" fill="#F0EDE8" stroke="#E0DCD5"/>
+              <text x="45" y="15" text-anchor="middle" font-size="8" fill="#666">Recipe:</text>
+              <text x="45" y="28" text-anchor="middle" font-size="7" fill="#666">lr, epochs...</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 280 80 L 310 80" stroke="#5a5" stroke-width="2"/>
+            <polygon points="310,80 300,74 300,86" fill="#5a5"/>
+
+            <!-- Bob trains -->
+            <g transform="translate(320, 45)">
+              <circle cx="25" cy="25" r="20" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
+              <text x="25" y="30" text-anchor="middle" font-size="16">B</text>
+              <text x="25" y="60" text-anchor="middle" font-size="10" fill="#1a1a2e">Bob</text>
+              <text x="25" y="75" text-anchor="middle" font-size="8" fill="#4A90D9">trains locally</text>
+            </g>
+
+            <!-- Check mark -->
+            <text x="190" y="145" text-anchor="middle" font-size="11" fill="#5a5">Fast! Same result, way less data.</text>
           </g>
 
-          <!-- Bob -->
-          <g transform="translate(480, 40)">
-            <circle cx="30" cy="30" r="25" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
-            <text x="30" y="35" text-anchor="middle" font-size="20">B</text>
-            <text x="30" y="75" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">Bob</text>
-            <!-- Bob's model (starts as base) -->
-            <rect x="-10" y="90" width="80" height="40" rx="6" fill="#666"/>
-            <text x="30" y="115" text-anchor="middle" font-size="11" fill="white">Base Model</text>
+          <!-- Speech bubble from Alice -->
+          <g transform="translate(100, 180)">
+            <path d="M 0 30 Q 0 0 30 0 L 570 0 Q 600 0 600 30 L 600 70 Q 600 100 570 100 L 100 100 L 80 130 L 90 100 L 30 100 Q 0 100 0 70 Z" fill="#FAF8F5" stroke="#E0DCD5" stroke-width="1"/>
+            <text x="300" y="35" text-anchor="middle" font-size="11" fill="#1a1a2e" font-style="italic">"The model diff is huge and would take forever to send!</text>
+            <text x="300" y="52" text-anchor="middle" font-size="11" fill="#1a1a2e" font-style="italic">What if I just sent you the dataset I used instead? It's only 10,000 examples.</text>
+            <text x="300" y="69" text-anchor="middle" font-size="11" fill="#1a1a2e" font-style="italic">You can train your own copy—took me 30 minutes with this recipe."</text>
+            <text x="300" y="90" text-anchor="middle" font-size="10" fill="#666">— Alice</text>
           </g>
 
-          <!-- Train arrow -->
-          <g transform="translate(520, 150)">
-            <path d="M 0 0 L 0 30" stroke="#4A90D9" stroke-width="2"/>
-            <polygon points="0,30 -6,20 6,20" fill="#4A90D9"/>
-            <text x="0" y="50" text-anchor="middle" font-size="10" fill="#4A90D9">trains</text>
-          </g>
-
-          <!-- Reconstructed model -->
-          <g transform="translate(470, 175)">
-            <rect x="0" y="0" width="80" height="40" rx="6" fill="#1a1a2e"/>
-            <text x="40" y="25" text-anchor="middle" font-size="11" fill="white">Fine-tuned</text>
-          </g>
-
-          <!-- Equality indicator -->
-          <g transform="translate(280, 195)">
-            <text x="0" y="0" font-size="16" fill="#50C878">=</text>
-            <text x="25" y="0" font-size="11" fill="#50C878">same model!</text>
+          <!-- Key insight -->
+          <g transform="translate(150, 320)">
+            <rect x="0" y="0" width="500" height="45" rx="6" fill="#D97757" opacity="0.1" stroke="#D97757"/>
+            <text x="250" y="20" text-anchor="middle" font-size="12" fill="#1a1a2e" font-weight="600">Key insight: Sending the training data is equivalent to sending the weight update.</text>
+            <text x="250" y="38" text-anchor="middle" font-size="11" fill="#666">The information content is the same—but the data is much smaller!</text>
           </g>
         </svg>
-        <p class="illustration-caption">Alice sends compressed labels to Bob using the model as a shared codebook. Bob trains on each batch and reconstructs Alice's fine-tuned model.</p>
+        <p class="illustration-caption">Alice can share her fine-tuned model by sending training data instead of weights. Both contain the same information, but the data is far more compact.</p>
       </div>
 
       <p>How many bits does Alice need to send?</p>
@@ -512,6 +556,108 @@
 
       <p>This is the information that was "excess" during training—bits the model needed to receive early on but wouldn't need anymore after learning. It's the information that got absorbed into the parameters. <em>The bits that count toward generalization.</em></p>
 
+      <!-- EDL intuition diagram -->
+      <div class="illustration">
+        <svg viewBox="0 0 800 320" style="max-width: 800px; width: 100%; height: auto;">
+          <!-- Scenario 1: Bob without trained model -->
+          <g transform="translate(20, 20)">
+            <rect x="0" y="0" width="360" height="130" rx="8" fill="#fef6f6" stroke="#c66" stroke-width="1"/>
+            <text x="180" y="25" text-anchor="middle" font-size="12" font-weight="600" fill="#c66">Scenario A: Bob has only the base model</text>
+
+            <!-- Alice sends MDL -->
+            <g transform="translate(20, 45)">
+              <circle cx="20" cy="20" r="16" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
+              <text x="20" y="25" text-anchor="middle" font-size="14">A</text>
+            </g>
+
+            <!-- Big message -->
+            <g transform="translate(80, 40)">
+              <rect x="0" y="0" width="140" height="50" rx="4" fill="#D97757"/>
+              <text x="70" y="22" text-anchor="middle" font-size="10" fill="white">Compressed labels</text>
+              <text x="70" y="38" text-anchor="middle" font-size="14" fill="white" font-weight="bold">MDL bits</text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 230 65 L 270 65" stroke="#c66" stroke-width="2"/>
+            <polygon points="270,65 260,59 260,71" fill="#c66"/>
+
+            <!-- Bob base -->
+            <g transform="translate(285, 45)">
+              <circle cx="20" cy="20" r="16" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
+              <text x="20" y="25" text-anchor="middle" font-size="14">B</text>
+              <text x="20" y="50" text-anchor="middle" font-size="8" fill="#666">Base model</text>
+            </g>
+
+            <text x="180" y="115" text-anchor="middle" font-size="10" fill="#666">Bob needs ALL the information to reconstruct Alice's model</text>
+          </g>
+
+          <!-- Scenario 2: Bob WITH trained model -->
+          <g transform="translate(410, 20)">
+            <rect x="0" y="0" width="360" height="130" rx="8" fill="#f6fef6" stroke="#5a5" stroke-width="1"/>
+            <text x="180" y="25" text-anchor="middle" font-size="12" font-weight="600" fill="#5a5">Scenario B: Bob already has the trained model</text>
+
+            <!-- Alice sends less -->
+            <g transform="translate(20, 45)">
+              <circle cx="20" cy="20" r="16" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
+              <text x="20" y="25" text-anchor="middle" font-size="14">A</text>
+            </g>
+
+            <!-- Small message -->
+            <g transform="translate(80, 45)">
+              <rect x="0" y="0" width="100" height="40" rx="4" fill="#50C878"/>
+              <text x="50" y="18" text-anchor="middle" font-size="9" fill="white">Just residuals</text>
+              <text x="50" y="32" text-anchor="middle" font-size="12" fill="white" font-weight="bold">n × L<tspan baseline-shift="sub" font-size="8">test</tspan></text>
+            </g>
+
+            <!-- Arrow -->
+            <path d="M 195 65 L 270 65" stroke="#5a5" stroke-width="2"/>
+            <polygon points="270,65 260,59 260,71" fill="#5a5"/>
+
+            <!-- Bob trained -->
+            <g transform="translate(285, 40)">
+              <circle cx="20" cy="20" r="16" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
+              <text x="20" y="25" text-anchor="middle" font-size="14">B</text>
+              <rect x="-5" y="42" width="50" height="20" rx="3" fill="#1a1a2e"/>
+              <text x="20" y="56" text-anchor="middle" font-size="7" fill="white">Trained</text>
+            </g>
+
+            <text x="180" y="115" text-anchor="middle" font-size="10" fill="#666">Bob only needs residual uncertainty—he already learned the patterns!</text>
+          </g>
+
+          <!-- The difference = EDL -->
+          <g transform="translate(100, 165)">
+            <rect x="0" y="0" width="600" height="140" rx="8" fill="#D97757" opacity="0.08" stroke="#D97757"/>
+            <text x="300" y="25" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a2e">The Difference = EDL</text>
+
+            <!-- Visual equation -->
+            <g transform="translate(50, 50)">
+              <!-- MDL box -->
+              <rect x="0" y="0" width="100" height="60" rx="4" fill="#D97757" opacity="0.7"/>
+              <text x="50" y="25" text-anchor="middle" font-size="11" fill="white">MDL</text>
+              <text x="50" y="45" text-anchor="middle" font-size="10" fill="white">(all bits sent)</text>
+
+              <!-- Minus -->
+              <text x="130" y="35" font-size="24" fill="#1a1a2e">−</text>
+
+              <!-- n*L_test box -->
+              <rect x="160" y="10" width="100" height="40" rx="4" fill="#50C878"/>
+              <text x="210" y="35" text-anchor="middle" font-size="11" fill="white">n × L<tspan baseline-shift="sub" font-size="8">test</tspan></text>
+
+              <!-- Equals -->
+              <text x="290" y="35" font-size="24" fill="#1a1a2e">=</text>
+
+              <!-- EDL box -->
+              <rect x="320" y="0" width="160" height="60" rx="4" fill="#D97757"/>
+              <text x="400" y="25" text-anchor="middle" font-size="14" fill="white" font-weight="bold">EDL</text>
+              <text x="400" y="45" text-anchor="middle" font-size="10" fill="white">(bits that generalize)</text>
+            </g>
+
+            <text x="300" y="125" text-anchor="middle" font-size="11" fill="#666" font-style="italic">EDL = the information the model actually learned—what it couldn't have predicted without training</text>
+          </g>
+        </svg>
+        <p class="illustration-caption">EDL measures the difference: how many bits Alice needs to send to Bob without the trained model vs. with it. This difference is exactly what the model learned.</p>
+      </div>
+
       <!-- Visualization 2: MDL/EDL Decomposition -->
       <div class="visualization" id="viz-edl-decomp">
         <div class="viz-title">The MDL/EDL Decomposition</div>
@@ -525,6 +671,28 @@
           </div>
           <label>Adjust L<sub>test</sub>: <input type="range" id="ltest-slider" min="0.1" max="2" step="0.05" value="0.8"></label>
           <span id="ltest-display">0.80</span>
+        </div>
+      </div>
+
+      <!-- Visualization: Multi-epoch training -->
+      <div class="visualization" id="viz-multi-epoch">
+        <div class="viz-title">Training as Information Extraction</div>
+        <div class="viz-subtitle">The dataset is an information source (MDL). Training extracts generalizable information (EDL). More epochs can increase extraction, but can't add information beyond what's in the data.</div>
+        <div class="viz-container" id="multi-epoch-chart"></div>
+        <div class="viz-controls">
+          <button id="epoch-play">Play Training</button>
+          <label>Epochs: <span id="epoch-display">1</span></label>
+          <input type="range" id="epoch-slider" min="1" max="10" value="1">
+          <div style="display: flex; gap: 2rem; margin-left: auto;">
+            <div style="font-size: 0.85rem;">
+              <span style="display: inline-block; width: 12px; height: 12px; background: rgba(232, 155, 126, 0.5); margin-right: 4px; vertical-align: middle;"></span>
+              MDL (bits in data): <span id="mdl-total" class="metric-display" style="font-size: 1rem;">0</span>
+            </div>
+            <div style="font-size: 0.85rem;">
+              <span style="display: inline-block; width: 12px; height: 12px; background: #D97757; margin-right: 4px; vertical-align: middle;"></span>
+              EDL (bits learned): <span id="edl-total" class="metric-display" style="font-size: 1rem;">0</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1482,7 +1650,7 @@
       const areaPath = svg.append('path')
         .datum(data.slice(0, 1))
         .attr('fill', colors.coralLight)
-        .attr('opacity', 0.5)
+        .attr('opacity', 0.7)
         .attr('d', area);
 
       // Line for loss curve
@@ -1602,7 +1770,8 @@
       const mdlPath = svg.append('path')
         .datum(data)
         .attr('class', 'mdl-area')
-        .attr('fill', colors.creamDark)
+        .attr('fill', colors.coralLight)
+        .attr('opacity', 0.4)
         .attr('stroke', 'none')
         .attr('d', mdlArea);
 
@@ -1615,7 +1784,7 @@
       const edlPath = svg.append('path')
         .datum(data)
         .attr('class', 'edl-area')
-        .attr('fill', colors.coralLight)
+        .attr('fill', colors.coral)
         .attr('opacity', 0)
         .attr('d', edlArea);
 
@@ -1653,8 +1822,8 @@
       let viewMode = 'mdl';
 
       function updateView() {
-        mdlPath.attr('opacity', viewMode === 'mdl' || viewMode === 'both' ? 0.5 : 0);
-        edlPath.attr('opacity', viewMode === 'edl' || viewMode === 'both' ? 0.7 : 0);
+        mdlPath.attr('opacity', viewMode === 'mdl' || viewMode === 'both' ? 0.4 : 0);
+        edlPath.attr('opacity', viewMode === 'edl' || viewMode === 'both' ? 0.8 : 0);
       }
 
       function updateLTest(newLTest) {
@@ -1703,6 +1872,208 @@
       });
 
       updateView();
+    }
+
+    // ============================================================
+    // VISUALIZATION: MULTI-EPOCH TRAINING
+    // ============================================================
+
+    function initMultiEpochVisualization() {
+      const container = d3.select('#multi-epoch-chart');
+      if (!container.node()) return;
+
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+
+      // Generate training data for multiple epochs
+      const numSteps = 100;
+      const baseData = generateMDLData(numSteps);
+      const lTest = 0.5; // Final test loss
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLinear()
+        .domain([0, numSteps * 10]) // Up to 10 epochs
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(baseData, d => d.loss) * 1.1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(10).tickFormat(d => d % numSteps === 0 ? `Epoch ${d / numSteps}` : ''))
+        .selectAll('text')
+        .attr('font-size', '9px');
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5));
+
+      // MDL reference area (first epoch only - the "information in the data")
+      const mdlArea = d3.area()
+        .x(d => x(d.step))
+        .y0(height - margin.bottom)
+        .y1(d => y(d.loss));
+
+      svg.append('path')
+        .datum(baseData)
+        .attr('fill', colors.coralLight)
+        .attr('opacity', 0.3)
+        .attr('d', mdlArea);
+
+      // MDL label
+      svg.append('text')
+        .attr('x', x(numSteps / 2))
+        .attr('y', y(1.5))
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '11px')
+        .attr('fill', colors.coral)
+        .text('MDL (first epoch)');
+
+      // L_test line
+      svg.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', width - margin.right)
+        .attr('y1', y(lTest))
+        .attr('y2', y(lTest))
+        .attr('stroke', colors.darkBlue)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+
+      svg.append('text')
+        .attr('x', width - margin.right - 5)
+        .attr('y', y(lTest) - 5)
+        .attr('text-anchor', 'end')
+        .attr('font-size', '11px')
+        .attr('fill', colors.darkBlue)
+        .text('L_test (converged)');
+
+      // Generate multi-epoch data
+      function generateEpochData(epochs) {
+        const data = [];
+        let currentLoss = baseData[0].loss;
+
+        for (let e = 0; e < epochs; e++) {
+          for (let i = 0; i <= numSteps; i++) {
+            const globalStep = e * numSteps + i;
+            // Loss decreases faster in early epochs, approaches lTest asymptotically
+            const epochDecay = Math.exp(-e * 0.3);
+            const stepDecay = Math.exp(-i * 0.03);
+            currentLoss = lTest + (baseData[0].loss - lTest) * epochDecay * stepDecay * (1 + Math.random() * 0.05);
+            data.push({ step: globalStep, loss: Math.max(lTest * 0.95, currentLoss) });
+          }
+        }
+        return data;
+      }
+
+      // Training curve (updates with epochs)
+      const line = d3.line()
+        .x(d => x(d.step))
+        .y(d => y(d.loss))
+        .curve(d3.curveMonotoneX);
+
+      const trainingPath = svg.append('path')
+        .datum(baseData)
+        .attr('fill', 'none')
+        .attr('stroke', colors.coral)
+        .attr('stroke-width', 2)
+        .attr('d', line);
+
+      // EDL area (grows with epochs)
+      const edlAreaGen = d3.area()
+        .x(d => x(d.step))
+        .y0(y(lTest))
+        .y1(d => y(Math.max(d.loss, lTest)));
+
+      const edlPath = svg.append('path')
+        .datum(baseData.filter(d => d.loss > lTest))
+        .attr('fill', colors.coral)
+        .attr('opacity', 0.6)
+        .attr('d', edlAreaGen);
+
+      // Calculate totals
+      function calculateTotals(data, epochs) {
+        // MDL is always just the first epoch
+        let mdl = 0;
+        for (let i = 0; i < Math.min(numSteps, data.length); i++) {
+          mdl += baseData[i].loss;
+        }
+
+        // EDL increases with epochs as we extract more from the same data
+        let edl = 0;
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].loss > lTest) {
+            edl += (data[i].loss - lTest);
+          }
+        }
+        // Normalize: EDL can't exceed MDL - n*lTest
+        const maxEdl = mdl - numSteps * lTest;
+        edl = Math.min(edl * 0.3, maxEdl * (1 - Math.exp(-epochs * 0.5)));
+
+        return { mdl: mdl.toFixed(0), edl: edl.toFixed(0) };
+      }
+
+      function updateVisualization(epochs) {
+        const data = generateEpochData(epochs);
+
+        // Update x domain
+        x.domain([0, numSteps * epochs]);
+        svg.select('.axis').call(d3.axisBottom(x).ticks(epochs + 1).tickFormat((d, i) => i <= epochs ? `Epoch ${i}` : ''));
+
+        trainingPath.datum(data).attr('d', line);
+        edlPath.datum(data.filter(d => d.loss > lTest)).attr('d', edlAreaGen);
+
+        const totals = calculateTotals(data, epochs);
+        document.getElementById('mdl-total').textContent = totals.mdl;
+        document.getElementById('edl-total').textContent = totals.edl;
+        document.getElementById('epoch-display').textContent = epochs;
+      }
+
+      // Controls
+      const slider = document.getElementById('epoch-slider');
+      slider.addEventListener('input', (e) => {
+        updateVisualization(parseInt(e.target.value));
+      });
+
+      // Play button
+      let playing = false;
+      let playInterval;
+      const playBtn = document.getElementById('epoch-play');
+
+      playBtn.addEventListener('click', () => {
+        if (playing) {
+          clearInterval(playInterval);
+          playBtn.textContent = 'Play Training';
+          playing = false;
+        } else {
+          let epoch = 1;
+          slider.value = 1;
+          updateVisualization(1);
+          playBtn.textContent = 'Pause';
+          playing = true;
+
+          playInterval = setInterval(() => {
+            epoch++;
+            if (epoch > 10) {
+              clearInterval(playInterval);
+              playBtn.textContent = 'Play Training';
+              playing = false;
+              return;
+            }
+            slider.value = epoch;
+            updateVisualization(epoch);
+          }, 800);
+        }
+      });
+
+      // Initial render
+      updateVisualization(1);
     }
 
     // ============================================================
@@ -2620,6 +2991,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       initMDLVisualization();
       initEDLDecomposition();
+      initMultiEpochVisualization();
       initSignaturesVisualization();
       initCrossoverVisualization();
       initOneExampleVisualization();
