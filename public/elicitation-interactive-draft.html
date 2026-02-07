@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bits That Count: Quantifying and Predicting Emergent Capabilities in Language Models</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --coral: #D97757;
+      --coral-light: #E89B7E;
+      --coral-dark: #B85A3C;
+      --dark-blue: #1a1a2e;
+      --cream: #FAF8F5;
+      --cream-dark: #F0EDE8;
+      --text: #2D2D2D;
+      --text-light: #666;
+      --border: #E0DCD5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--cream);
+    }
+
+    article {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    header {
+      text-align: left;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--dark-blue);
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .authors {
+      font-size: 1rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+
+    .summary {
+      font-style: italic;
+      color: var(--text-light);
+      /* font-weight: 700; */
+      /* max-width: 600px; */
+      /* margin: 0 auto; */
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--dark-blue);
+      margin: 3rem 0 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--dark-blue);
+      margin: 2rem 0 1rem;
+    }
+
+    p {
+      margin-bottom: 1.25rem;
+      max-width: 700px;
+    }
+
+    strong {
+      color: var(--dark-blue);
+    }
+
+    .highlight {
+      background: linear-gradient(180deg, transparent 60%, rgba(217, 119, 87, 0.2) 60%);
+    }
+
+    .formula {
+      font-family: 'Georgia', serif;
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 1.5rem;
+      background: var(--cream-dark);
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid var(--coral);
+    }
+
+    ul, ol {
+      margin: 1rem 0 1.5rem 1.5rem;
+      max-width: 700px;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Visualization containers */
+    .visualization {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+
+    .viz-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--dark-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .viz-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+
+    .viz-container {
+      position: relative;
+      width: 100%;
+      min-height: 300px;
+    }
+
+    .viz-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .viz-controls label {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    .viz-controls input[type="range"] {
+      width: 200px;
+      accent-color: var(--coral);
+    }
+
+    .viz-controls button {
+      background: var(--coral);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    .viz-controls button:hover {
+      background: var(--coral-dark);
+    }
+
+    .viz-controls button.secondary {
+      background: var(--cream-dark);
+      color: var(--text);
+    }
+
+    .viz-controls button.secondary:hover {
+      background: var(--border);
+    }
+
+    .viz-controls button.active {
+      background: var(--dark-blue);
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .toggle-group button {
+      border-radius: 0;
+    }
+
+    .toggle-group button:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+
+    .toggle-group button:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+
+    .metric-display {
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      font-size: 1.5rem;
+      color: var(--coral);
+      font-weight: 600;
+    }
+
+    /* SVG styles */
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .axis text {
+      font-size: 11px;
+      fill: var(--text-light);
+    }
+
+    .axis line, .axis path {
+      stroke: var(--border);
+    }
+
+    .grid line {
+      stroke: var(--cream-dark);
+      stroke-dasharray: 2, 2;
+    }
+
+    .annotation {
+      font-size: 12px;
+      fill: var(--text-light);
+    }
+
+    .annotation-box {
+      fill: white;
+      stroke: var(--border);
+      rx: 4;
+    }
+
+    /* Calculator styles */
+    .calculator {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .calc-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .calc-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .calc-input-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .calc-input-group input,
+    .calc-input-group select {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .calc-output {
+      background: var(--cream-dark);
+      padding: 1.5rem;
+      border-radius: 8px;
+    }
+
+    .calc-result {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--coral);
+    }
+
+    .calc-warning {
+      color: var(--coral-dark);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(217, 119, 87, 0.1);
+      border-radius: 4px;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute;
+      background: var(--dark-blue);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+
+    /* Illustrations */
+    .illustration {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .illustration svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .illustration-caption {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-top: 1rem;
+      margin-bottom: 0;
+      font-style: italic;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Footnotes */
+    .footnote {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+      padding-top: 1rem;
+    }
+
+    .footnote p {
+      margin-bottom: 0.5rem;
+    }
+
+    sup {
+      color: var(--coral);
+      font-weight: 500;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 1.75rem; }
+      h2 { font-size: 1.4rem; }
+      .calculator { grid-template-columns: 1fr; }
+      .viz-controls { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>Bits That Count: Quantifying and Predicting Emergent Capabilities in Language Models</h1>
+      <p class="authors">Elizabeth Donoway, Hailey Joren, Ethan Perez, John Schulman, Fabien Roger, Jan Leike</p>
+      <p class="summary">Quantifying and predicting what language models know, how much they (can) learn, and how they learn it.</p>
+    </header>
+
+    <section id="introduction">
+      <p>It's unclear what models know.</p>
+
+      <p>It's hard to get them to show us—they don't just tell us (yet), and we often don't even know the right questions to ask.</p>
+
+      <p>Language models are pretrained on vast amounts of diverse data, acquiring capabilities that may remain hidden until the right prompt or training signal surfaces them. We can't enumerate all the capabilities a model might have, and sometimes we can't even anticipate them. Though we've made significant progress—and it's hard to dispute the many practical successes of AI that have been achieved anyway—we still have much to learn about what models know, how they learn, and how capable they might be.</p>
+
+      <p>This uncertainty has practical consequences.</p>
+
+      <p><strong>For safety:</strong> If a dangerous capability is latent, it can be surfaced with minimal intervention—a few examples, a clever prompt, an unexpected deployment context. If the capability must be taught from scratch, the information barrier is higher and more predictable. Knowing which regime we're in changes how we assess risk.</p>
+
+      <p><strong>For evaluation:</strong> When we fine-tune models to assess their capabilities, are we measuring what they already know, or inadvertently teaching them something new? If our elicitation procedure crosses into teaching, we're no longer evaluating the model that will be deployed—we're evaluating a different model, one that learned during the evaluation itself.</p>
+
+      <p><strong>For efficiency:</strong> Training is expensive. If a capability is already latent, massive datasets and high-rank adapters are wasteful. If it must be taught, insufficient data wastes time. Knowing the learning regime in advance lets us allocate resources appropriately.</p>
+
+      <p><strong>For science:</strong> We largely lack formal descriptions of how models learn. We have heuristics and intuitions, but these are difficult to make predictions from. A quantitative framework for learning dynamics would let us ask—and answer—questions we currently can't even formulate precisely.</p>
+
+      <p>We develop such a framework here, introducing <span class="highlight"><strong>Excess Description Length</strong></span> (EDL) as an operational metric for the generalizable information a model learns from training data. EDL distinguishes teaching from elicitation, tracks transitions between learning mechanisms, and predicts parameter capacity limits for fine-tuning.</p>
+
+      <!-- <p>EDL offers a more comprehensive framework for evaluating model capabilities and learning, one that also aligns closely with our understanding of human learning and cognition.</p> -->
+    </section>
+
+    <h2>Learning as Compression</h2>
+
+    <section id="alice-bob">
+      <h3>Alice and Bob Resolve Some Communication Issues</h3>
+
+      <p>Imagine Alice has fine-tuned a language model and wants to share it with Bob. Bob already has the same base model and the same training inputs, but not the labels. Instead of sending gigabytes of weight differences, Alice could just send the labels along with instructions describing exactly how to replicate her training procedure.<sup>[1]</sup> She can even use the base model itself to communicate the labels to Bob. Bob trains his copy on them and reconstructs her model exactly.<sup>[2]</sup></p>
+
+      <!-- Alice and Bob diagram -->
+      <div class="illustration">
+        <svg viewBox="0 0 700 220" style="max-width: 700px; width: 100%; height: auto;">
+          <!-- Alice -->
+          <g transform="translate(50, 40)">
+            <circle cx="30" cy="30" r="25" fill="#E89B7E" stroke="#D97757" stroke-width="2"/>
+            <text x="30" y="35" text-anchor="middle" font-size="20">A</text>
+            <text x="30" y="75" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">Alice</text>
+            <!-- Alice's model -->
+            <rect x="-10" y="90" width="80" height="40" rx="6" fill="#1a1a2e"/>
+            <text x="30" y="115" text-anchor="middle" font-size="11" fill="white">Fine-tuned</text>
+          </g>
+
+          <!-- Communication channel -->
+          <g transform="translate(150, 80)">
+            <!-- Arrow with bits -->
+            <path d="M 0 50 L 280 50" stroke="#D97757" stroke-width="3" stroke-dasharray="8,4"/>
+            <polygon points="280,50 265,42 265,58" fill="#D97757"/>
+            <!-- Bits label -->
+            <rect x="100" y="25" width="80" height="30" rx="15" fill="#FAF8F5" stroke="#D97757" stroke-width="2"/>
+            <text x="140" y="45" text-anchor="middle" font-size="12" fill="#D97757" font-weight="600">Labels</text>
+            <text x="140" y="85" text-anchor="middle" font-size="11" fill="#666">compressed via model predictions</text>
+          </g>
+
+          <!-- Bob -->
+          <g transform="translate(480, 40)">
+            <circle cx="30" cy="30" r="25" fill="#B8D4E8" stroke="#4A90D9" stroke-width="2"/>
+            <text x="30" y="35" text-anchor="middle" font-size="20">B</text>
+            <text x="30" y="75" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a2e">Bob</text>
+            <!-- Bob's model (starts as base) -->
+            <rect x="-10" y="90" width="80" height="40" rx="6" fill="#666"/>
+            <text x="30" y="115" text-anchor="middle" font-size="11" fill="white">Base Model</text>
+          </g>
+
+          <!-- Train arrow -->
+          <g transform="translate(520, 150)">
+            <path d="M 0 0 L 0 30" stroke="#4A90D9" stroke-width="2"/>
+            <polygon points="0,30 -6,20 6,20" fill="#4A90D9"/>
+            <text x="0" y="50" text-anchor="middle" font-size="10" fill="#4A90D9">trains</text>
+          </g>
+
+          <!-- Reconstructed model -->
+          <g transform="translate(470, 175)">
+            <rect x="0" y="0" width="80" height="40" rx="6" fill="#1a1a2e"/>
+            <text x="40" y="25" text-anchor="middle" font-size="11" fill="white">Fine-tuned</text>
+          </g>
+
+          <!-- Equality indicator -->
+          <g transform="translate(280, 195)">
+            <text x="0" y="0" font-size="16" fill="#50C878">=</text>
+            <text x="25" y="0" font-size="11" fill="#50C878">same model!</text>
+          </g>
+        </svg>
+        <p class="illustration-caption">Alice sends compressed labels to Bob using the model as a shared codebook. Bob trains on each batch and reconstructs Alice's fine-tuned model.</p>
+      </div>
+
+      <p>How many bits does Alice need to send?</p>
+
+      <p>This is the <strong>minimum description length</strong> (MDL) of the training data—the shortest message that lets Bob reconstruct the fine-tuned model given what he already knows.</p>
+
+      <p>To minimize the description length—that is, the file size—Alice can compress the labels. But she and Bob need to use the same compression algorithm so that Bob can decompress them. Here, the model itself becomes the compression algorithm. If the model already predicts a label well, Alice needs very few bits to communicate it. Saying "the answer is 68" to a model that already thinks "68" is likely requires almost no information. But if the model expects "14" when the answer is actually "68", Alice needs more bits to convey the surprise. Better predictions mean shorter messages.</p>
+
+      <p>If Alice sends labels sequentially, she and Bob can use an optimizer—say, SGD—to iteratively improve (train) their shared model as it compresses. They each update their copy after each batch Bob receives, using only the labels Bob has received so far. This keeps the compression algorithm identical on both ends, so Bob can always decompress.</p>
+
+      <p>Over time, the model's predictions improve, so Alice can send each new batch of labels using progressively smaller files. Once every label in the dataset has been received by Bob, he has all the information necessary to recreate Alice's fine-tuned model.</p>
+    </section>
+
+    <section id="computing-mdl">
+      <h3>Computing MDL from a Training Run</h3>
+
+      <p>MDL is simply the sum of log-losses on each training label, computed <em>before</em> the model updates on that label. It measures how many bits the model needed to receive to encode all the training labels once. In terms of training, this is the total log-loss accumulated over the first epoch.</p>
+
+      <!-- Visualization 1: Accumulating MDL -->
+      <div class="visualization" id="viz-mdl">
+        <div class="viz-title">Accumulating MDL</div>
+        <div class="viz-subtitle">Watch the model accumulate bits as it processes training data. The shaded area represents the total MDL.</div>
+        <div class="viz-container" id="mdl-chart"></div>
+        <div class="viz-controls">
+          <button id="mdl-play">Play</button>
+          <label>Training step: <span id="mdl-step-display">0</span></label>
+          <input type="range" id="mdl-slider" min="0" max="100" value="0">
+          <div class="metric-display">MDL = <span id="mdl-value">0</span> bits</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mdl-to-edl">
+      <h3>From MDL to EDL</h3>
+
+      <p>MDL tells us how much information the model received. But how much did it actually <em>learn</em>? How much structure did it extract about patterns that generalize to new data?</p>
+
+      <p>After training (potentially for multiple epochs), evaluate the model on held-out test data. The test loss represents the model's remaining uncertainty—the information it <em>couldn't</em> compress into its parameters.</p>
+
+      <p>If the model learned nothing generalizable, its test loss would be as high as its initial training loss. MDL would equal n × L<sub>test</sub>, and there would be no "excess."</p>
+
+      <p>If the model learned perfectly, its test loss would be zero. Everything in MDL would be "excess"—information that got compressed into the weights.</p>
+
+      <p><strong>Excess description length</strong> is the difference:</p>
+
+      <div class="formula">
+        <strong>EDL = MDL − n × L<sub>test</sub></strong>
+      </div>
+
+      <p>This is the information that was "excess" during training—bits the model needed to receive early on but wouldn't need anymore after learning. It's the information that got absorbed into the parameters. <em>The bits that count toward generalization.</em></p>
+
+      <!-- Visualization 2: MDL/EDL Decomposition -->
+      <div class="visualization" id="viz-edl-decomp">
+        <div class="viz-title">The MDL/EDL Decomposition</div>
+        <div class="viz-subtitle">See how MDL decomposes into EDL (learned information) and residual (test loss × n).</div>
+        <div class="viz-container" id="edl-decomp-chart"></div>
+        <div class="viz-controls">
+          <div class="toggle-group">
+            <button id="show-mdl" class="active">Show MDL</button>
+            <button id="show-edl" class="secondary">Show EDL</button>
+            <button id="show-both" class="secondary">Show Both</button>
+          </div>
+          <label>Adjust L<sub>test</sub>: <input type="range" id="ltest-slider" min="0.1" max="2" step="0.05" value="0.8"></label>
+          <span id="ltest-display">0.80</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="why-this-works">
+      <h3>Why This Works</h3>
+
+      <p>Learning is compression. When a model learns a pattern, it can predict future instances of that pattern with lower loss, meaning fewer bits needed to encode them.</p>
+
+      <p>A model that has learned "numbers sum according to arithmetic" can encode "23 + 45 = 68" very cheaply. A model that treats each arithmetic fact as an arbitrary association needs many bits per fact.</p>
+
+      <p>EDL captures exactly this: it measures how much the model's predictions improved through learning, expressed in the natural currency of information theory—bits.</p>
+      
+      <p>EDL also captures the learning dynamics. As the model learns, its predictions improve, so the bits needed to encode new labels decrease. The rate of this decrease reflects how quickly the model is learning generalizable patterns.</p>
+
+      <p>Crucially, EDL separates generalization from memorization. A model that memorizes the training set achieves low training loss but high test loss, so EDL remains small because L<sub>test</sub> is large. Only patterns that transfer to held-out data contribute to EDL.</p>
+
+      <p>In this way, EDL provides a more nuanced view of model performance and learning than traditional metrics. It highlights the importance of generalization and the ability to apply learned knowledge to new situations, rather than simply memorizing the training data. It emphasizes that efficient learners achieve better compression by leveraging learned complexity—existing knowledge—to reduce the bits needed for learning.</p>
+    </section>
+
+    <section id="note-on-loss">
+      <h3>A Note on Loss</h3>
+
+      <p>Log-loss is a natural choice for measuring the information content of training data and the learning process. It has a clear interpretation in terms of bits, and it directly reflects the model's uncertainty about the training labels.</p>
+
+      <p>However, it's important to recognize that log-loss is not a perfect proxy for all capabilities we care about. Most metrics we might want to use are not differentiable, and we may not even be able to express them quantitatively, anyway. Log-loss is often the best proxy we have.</p>
+
+      <p>Natural language tasks can have many "correct" responses—different phrasings that correspond to the same answer—and the dataset selects one of these as the label. For tasks with multiple valid responses, the dataset's choice of "ground truth" can introduce noise, meaning that low loss doesn't always correspond to high performance on the underlying task—or the actual capability we want to assess. In such cases, EDL may not perfectly capture the emergence of capabilities that are not well-aligned with the specific labels used during training.</p>
+
+      <!-- <p>Natural language tasks can have many "correct" responses—different phrasings that correspond to the same answer—and the dataset selects one of these as the label. This choice of "ground truth" means that labels are noisy (they don't fully match the true distribution of correct responses), and that loss doesn't always closely track the behaviors we care about.</p> -->
+
+      <p>We want to emphasize that loss and EDL, respectively, measure <em>information</em> and information <em>learned</em> (compression) with respect to a <em>specific distribution</em>; they are not direct measures of <em>capability itself</em>. We measure loss (and EDL) because we hope it tracks well with metrics we <em>do</em> care about for meaningful capability learned, not because it <em>is</em> the metric we care about.</p>
+
+      <p>Despite these limitations, log-loss and EDL remain valuable tools for quantifying learning dynamics and generalization in language models. They provide a consistent framework for measuring how much information a model has absorbed from its training data, even if it doesn't capture every nuance of capability development.</p>
+
+
+    <h2>More Is Different</h2>
+
+    <section id="emergence">
+      <p>In 1972, Philip Anderson argued that the reductionist program in physics—explaining everything by decomposing it into fundamental parts—misses something essential. "The ability to reduce everything to simple fundamental laws," he wrote, "does not imply the ability to start from those laws and reconstruct the universe." At every level of scale and organization, new properties appear that are qualitatively different from anything present at the level below. Superfluidity cannot be predicted from the quantum mechanics of individual helium atoms. Consciousness does not follow from neuron firing rates. The whole is not merely the sum of its parts—<em>more is different</em>.</p>
+
+      <p>This insight—that complexity at one scale gives rise to qualitatively new phenomena at another—is the principle of <strong>emergence</strong>. And it turns out to be central to understanding what language models learn.</p>
+
+      <h3>Emergence in Language Models</h3>
+
+      <p>Consider what happens during pretraining. A model processes billions of tokens, each one a local observation: a word following other words. No single token teaches the model arithmetic. No single paragraph teaches it to reason about code, or to translate between languages, or to write poetry. But collectively, at scale, these local patterns give rise to capabilities that are qualitatively different from anything present in any individual training example. The model develops internal representations that capture abstract structure: algorithms, conceptual relationships, reasoning strategies. These are emergent properties of the training process—they arise from the collective interaction of vast amounts of data with the model's parameters, and they cannot be understood by examining any single component in isolation.</p>
+
+      <p>This is Anderson's principle, instantiated in a neural network. <em>More is different</em>: more data, more parameters, more computation produce capabilities that are not simply "more of the same" but something qualitatively new.</p>
+
+      <h3>The Complexity of Capabilities</h3>
+
+      <p>In algorithmic information theory, the <em>complexity</em> of a system is the length of its shortest description. More complex systems require longer descriptions—more bits to specify.</p>
+
+      <p>We can evaluate any system in terms of its complexity, regardless of what that system is or how it manifests. Functions, computer programs, humans, rocks, the universe, and—most relevant for our experiments here—models and capabilities all have their own respective complexities, determined by what components they're composed of and how those components interact.</p>
+
+      <p>As a visual example, consider the complexities of systems with two degrees of freedom, shape and color:</p>
+
+      <!-- Complexity comparison diagram -->
+      <div class="illustration">
+        <svg viewBox="0 0 700 200" style="max-width: 700px; width: 100%; height: auto;">
+          <!-- System A: 100 blue circles (shown as pattern) -->
+          <g transform="translate(50, 20)">
+            <text x="100" y="0" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a2e">System A: 100 blue circles</text>
+            <g transform="translate(0, 20)">
+              <!-- Show a grid of blue circles -->
+              <circle cx="20" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="45" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="70" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="95" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="120" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="145" cy="20" r="8" fill="#4A90D9"/>
+              <circle cx="170" cy="20" r="8" fill="#4A90D9"/>
+              <text x="195" cy="25" font-size="20" fill="#666">...</text>
+              <circle cx="20" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="45" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="70" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="95" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="120" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="145" cy="50" r="8" fill="#4A90D9"/>
+              <circle cx="170" cy="50" r="8" fill="#4A90D9"/>
+              <text x="195" y="55" font-size="20" fill="#666">...</text>
+              <text x="100" y="90" font-size="12" fill="#666" text-anchor="middle">(×100)</text>
+            </g>
+            <!-- Arrow -->
+            <path d="M 220 50 L 260 50" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <!-- Compressed description -->
+            <rect x="270" y="25" width="80" height="50" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <circle cx="295" cy="50" r="10" fill="#4A90D9"/>
+            <text x="315" y="55" font-size="14" fill="#1a1a2e">× 100</text>
+            <text x="310" y="95" text-anchor="middle" font-size="11" fill="#666">Short description</text>
+          </g>
+
+          <!-- System B: Four different shapes -->
+          <g transform="translate(420, 20)">
+            <text x="120" y="0" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a2e">System B: 4 distinct shapes</text>
+            <g transform="translate(20, 30)">
+              <!-- Red square -->
+              <rect x="0" y="10" width="20" height="20" fill="#D97757"/>
+              <!-- Blue circle -->
+              <circle cx="60" cy="20" r="12" fill="#4A90D9"/>
+              <!-- Green triangle -->
+              <polygon points="110,32 122,8 134,32" fill="#50C878"/>
+              <!-- Yellow rhombus -->
+              <polygon points="180,8 195,20 180,32 165,20" fill="#E8A838"/>
+            </g>
+            <!-- Arrow -->
+            <path d="M 100 80 L 100 110" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <!-- Long description -->
+            <rect x="20" y="120" width="200" height="40" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <text x="120" y="145" text-anchor="middle" font-size="10" fill="#1a1a2e">red square, blue circle,</text>
+            <text x="120" y="157" text-anchor="middle" font-size="10" fill="#1a1a2e">green triangle, yellow rhombus</text>
+            <text x="120" y="178" text-anchor="middle" font-size="11" fill="#666">Long description</text>
+          </g>
+
+          <!-- Arrowhead marker -->
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+            </marker>
+          </defs>
+        </svg>
+        <p class="illustration-caption">System A contains more objects but has a shorter description—it is less complex. System B requires specifying each shape and color individually.</p>
+      </div>
+
+      <p>The same principle applies to capabilities. A model that has learned the algorithm for addition has a compact representation that covers infinitely many arithmetic facts. A model that memorizes individual facts needs a separate entry for each one—incompressible, high complexity.</p>
+
+      <h3>Where Emergence Meets Elicitation</h3>
+
+      <p>Here is where Anderson's principle connects to the central question of this work.</p>
+
+      <p>During pretraining, "more is different": scale produces emergent capabilities—complex internal representations that couldn't exist in a smaller model or with less data. These emergent capabilities have a measurable <em>complexity</em>, an information cost that was paid during pretraining.</p>
+
+      <p>The question we ask is: what happens when we fine-tune? Is the model surfacing complexity that already exists in its weights, or is it building new complexity from scratch?</p>
+
+      <p>When the relevant complexity is already present—when the emergent capability is latent—the model doesn't need to reconstruct it. It only needs a small signal that says, in effect, "use <em>this</em> capability for <em>this</em> task." This is <strong>elicitation</strong>: accessing emergent structure that already exists. The information cost is low, because the complexity was already paid for.</p>
+
+      <p>When the relevant complexity is absent—when the capability never emerged during pretraining—the model must build it during fine-tuning. It must pay the full information cost of constructing new representations. This is <strong>teaching</strong>: creating complexity that doesn't yet exist. The information cost is high, because emergence hasn't happened yet.</p>
+
+      <p>Our section titles are a nod to the interplay between these ideas. Anderson's "more is different" describes how scale creates emergence. The scaling-era mantra emphasizes the power of more data and more compute. We find that both need qualification. When the emergent complexity already exists, <strong>"less is all you need"</strong>—remarkably little information suffices to surface it. When it doesn't, <strong>"more is necessary"</strong>—you can't shortcut the information cost of building complexity from scratch.</p>
+
+      <p>EDL measures this cost. And the scaling of EDL with data reveals which learning mechanism—elicitation or teaching—governs the dynamics we observe.</p>
+    </section>
+
+    <h2>Dynamical Signatures of Elicitation and Teaching</h2>
+
+    <section id="signatures">
+      <p>When we plot EDL per token against the number of training examples, we see qualitatively different patterns depending on the dominant learning mechanism at a given dataset size.</p>
+
+      <h3>Elicitation: Monotonically Decreasing</h3>
+
+      <p>For models with latent capabilities, EDL per token decreases monotonically as we add training examples.</p>
+
+      <p>The first example may be highly informative, aligning a model's outputs to the desired response format and reducing uncertainty about which of its capabilities are relevant for the task ("Oh, you want me to output numbers in this format for arithmetic problems"). But subsequent examples add less and less. The model already knows arithmetic; additional examples just confirm what it already knows. There is no new algorithmic information to be learned.</p>
+
+      <!-- Elicitation cartoon: probability collapse -->
+      <div class="illustration">
+        <svg viewBox="0 0 750 180" style="max-width: 750px; width: 100%; height: auto;">
+          <!-- Before: uncertain predictions -->
+          <g transform="translate(30, 20)">
+            <text x="80" y="0" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e">Before: Model is uncertain</text>
+            <!-- Model box -->
+            <rect x="20" y="15" width="120" height="50" rx="6" fill="#1a1a2e"/>
+            <text x="80" y="45" text-anchor="middle" font-size="11" fill="white">Base Model</text>
+            <!-- Probability bars -->
+            <g transform="translate(20, 75)">
+              <text x="0" y="10" font-size="9" fill="#666">Arithmetic?</text>
+              <rect x="60" y="2" width="45" height="12" rx="2" fill="#D97757" opacity="0.4"/>
+              <text x="0" y="28" font-size="9" fill="#666">Poetry?</text>
+              <rect x="60" y="20" width="35" height="12" rx="2" fill="#4A90D9" opacity="0.4"/>
+              <text x="0" y="46" font-size="9" fill="#666">Code?</text>
+              <rect x="60" y="38" width="40" height="12" rx="2" fill="#50C878" opacity="0.4"/>
+              <text x="0" y="64" font-size="9" fill="#666">Other...</text>
+              <rect x="60" y="56" width="25" height="12" rx="2" fill="#E8A838" opacity="0.4"/>
+            </g>
+          </g>
+
+          <!-- Arrow 1: sees example -->
+          <g transform="translate(175, 50)">
+            <path d="M 0 25 L 60 25" stroke="#D97757" stroke-width="2"/>
+            <polygon points="60,25 50,19 50,31" fill="#D97757"/>
+            <text x="30" y="55" text-anchor="middle" font-size="10" fill="#D97757">sees "23+45=68"</text>
+          </g>
+
+          <!-- After: collapsed probability -->
+          <g transform="translate(260, 20)">
+            <text x="80" y="0" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e">After: Probability collapses</text>
+            <!-- Model box with update indicator -->
+            <rect x="20" y="15" width="120" height="50" rx="6" fill="#1a1a2e"/>
+            <text x="80" y="45" text-anchor="middle" font-size="11" fill="white">Updated</text>
+            <!-- Probability bars - collapsed -->
+            <g transform="translate(20, 75)">
+              <text x="0" y="10" font-size="9" fill="#666">Arithmetic?</text>
+              <rect x="60" y="2" width="95" height="12" rx="2" fill="#D97757"/>
+              <text x="0" y="28" font-size="9" fill="#666">Poetry?</text>
+              <rect x="60" y="20" width="8" height="12" rx="2" fill="#4A90D9" opacity="0.3"/>
+              <text x="0" y="46" font-size="9" fill="#666">Code?</text>
+              <rect x="60" y="38" width="5" height="12" rx="2" fill="#50C878" opacity="0.3"/>
+              <text x="0" y="64" font-size="9" fill="#666">Other...</text>
+              <rect x="60" y="56" width="3" height="12" rx="2" fill="#E8A838" opacity="0.3"/>
+            </g>
+          </g>
+
+          <!-- Arrow 2: next prediction -->
+          <g transform="translate(420, 50)">
+            <path d="M 0 25 L 60 25" stroke="#50C878" stroke-width="2"/>
+            <polygon points="60,25 50,19 50,31" fill="#50C878"/>
+            <text x="30" y="55" text-anchor="middle" font-size="10" fill="#50C878">predicts next</text>
+          </g>
+
+          <!-- Result: accurate prediction -->
+          <g transform="translate(505, 20)">
+            <text x="100" y="0" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e">Result: High accuracy</text>
+            <!-- Question -->
+            <rect x="20" y="20" width="160" height="35" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <text x="100" y="42" text-anchor="middle" font-size="11" fill="#1a1a2e">"What is 17 + 29?"</text>
+            <!-- Answer -->
+            <rect x="50" y="70" width="100" height="35" rx="6" fill="#50C878"/>
+            <text x="100" y="92" text-anchor="middle" font-size="14" fill="white" font-weight="600">"46" ✓</text>
+            <!-- Minimal new info needed -->
+            <text x="100" y="130" text-anchor="middle" font-size="10" fill="#666">One example was enough!</text>
+          </g>
+        </svg>
+        <p class="illustration-caption">Elicitation: The first example collapses uncertainty about which capability to use. The model already knows arithmetic—it just needed to know that's what you wanted.</p>
+      </div>
+
+      <p>This is the signature of elicitation: <em>diminishing returns to data</em>. Each example provides less marginal information than the previous one.</p>
+
+      <h3>Teaching: Monotonically Increasing</h3>
+
+      <p>When models learn new capabilities, EDL per token <em>increases</em> as we add examples.</p>
+
+      <p>Early in training, the model lacks the representations to identify any pattern. Each example is an isolated data point, essentially noise. The model can extract almost no generalizable information. The complexity of the task (and the capabilities required for it) is vastly larger than the amount of information contained in the data received by the model so far.</p>
+
+      <p>But as examples accumulate, the model begins to form useful representations. It starts to see the patterns in the data. Each new example makes the data more informative as a <em>whole</em>, because the model can now recognize patterns in earlier examples that it previously missed. The model is learning how to learn from this data.</p>
+
+      <!-- Teaching cartoon: building representations -->
+      <div class="illustration">
+        <svg viewBox="0 0 750 200" style="max-width: 750px; width: 100%; height: auto;">
+          <!-- Stage 1: Few examples, no pattern -->
+          <g transform="translate(20, 20)">
+            <text x="70" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="#1a1a2e">Few examples</text>
+            <rect x="10" y="15" width="120" height="80" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <!-- Scattered dots (no pattern visible) -->
+            <circle cx="35" cy="40" r="4" fill="#D97757" opacity="0.5"/>
+            <circle cx="80" cy="65" r="4" fill="#D97757" opacity="0.5"/>
+            <circle cx="55" cy="55" r="4" fill="#D97757" opacity="0.5"/>
+            <text x="70" y="110" text-anchor="middle" font-size="10" fill="#666">No pattern visible</text>
+            <text x="70" y="125" text-anchor="middle" font-size="10" fill="#666">EDL/token: low</text>
+          </g>
+
+          <!-- Arrow -->
+          <g transform="translate(155, 60)">
+            <path d="M 0 0 L 40 0" stroke="#666" stroke-width="2"/>
+            <polygon points="40,0 30,-5 30,5" fill="#666"/>
+          </g>
+
+          <!-- Stage 2: More examples, pattern emerging -->
+          <g transform="translate(210, 20)">
+            <text x="70" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="#1a1a2e">More examples</text>
+            <rect x="10" y="15" width="120" height="80" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <!-- More dots, pattern starting to emerge -->
+            <circle cx="30" cy="35" r="4" fill="#D97757" opacity="0.6"/>
+            <circle cx="45" cy="45" r="4" fill="#D97757" opacity="0.6"/>
+            <circle cx="60" cy="55" r="4" fill="#D97757" opacity="0.6"/>
+            <circle cx="75" cy="65" r="4" fill="#D97757" opacity="0.6"/>
+            <circle cx="90" cy="75" r="4" fill="#D97757" opacity="0.6"/>
+            <circle cx="105" cy="82" r="4" fill="#D97757" opacity="0.6"/>
+            <!-- Faint line -->
+            <path d="M 25 30 L 110 85" stroke="#4A90D9" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+            <text x="70" y="110" text-anchor="middle" font-size="10" fill="#666">Pattern emerging!</text>
+            <text x="70" y="125" text-anchor="middle" font-size="10" fill="#4A90D9">EDL/token: rising</text>
+          </g>
+
+          <!-- Arrow -->
+          <g transform="translate(345, 60)">
+            <path d="M 0 0 L 40 0" stroke="#666" stroke-width="2"/>
+            <polygon points="40,0 30,-5 30,5" fill="#666"/>
+          </g>
+
+          <!-- Stage 3: Many examples, clear pattern -->
+          <g transform="translate(400, 20)">
+            <text x="70" y="0" text-anchor="middle" font-size="11" font-weight="600" fill="#1a1a2e">Many examples</text>
+            <rect x="10" y="15" width="120" height="80" rx="6" fill="#F0EDE8" stroke="#E0DCD5"/>
+            <!-- Many dots with clear linear pattern -->
+            <circle cx="25" cy="30" r="4" fill="#D97757"/>
+            <circle cx="35" cy="38" r="4" fill="#D97757"/>
+            <circle cx="45" cy="45" r="4" fill="#D97757"/>
+            <circle cx="55" cy="52" r="4" fill="#D97757"/>
+            <circle cx="65" cy="58" r="4" fill="#D97757"/>
+            <circle cx="75" cy="65" r="4" fill="#D97757"/>
+            <circle cx="85" cy="72" r="4" fill="#D97757"/>
+            <circle cx="95" cy="78" r="4" fill="#D97757"/>
+            <circle cx="105" cy="85" r="4" fill="#D97757"/>
+            <!-- Clear fitted line -->
+            <path d="M 20 27 L 115 90" stroke="#4A90D9" stroke-width="2"/>
+            <text x="70" y="110" text-anchor="middle" font-size="10" fill="#50C878" font-weight="600">Algorithm learned!</text>
+            <text x="70" y="125" text-anchor="middle" font-size="10" fill="#666">EDL/token: peaks</text>
+          </g>
+
+          <!-- Arrow to insight -->
+          <g transform="translate(535, 60)">
+            <path d="M 0 0 L 40 0" stroke="#50C878" stroke-width="2"/>
+            <polygon points="40,0 30,-5 30,5" fill="#50C878"/>
+          </g>
+
+          <!-- Insight box -->
+          <g transform="translate(590, 25)">
+            <rect x="0" y="0" width="140" height="90" rx="8" fill="#50C878" opacity="0.1" stroke="#50C878"/>
+            <text x="70" y="25" text-anchor="middle" font-size="11" fill="#1a1a2e" font-weight="600">New capability</text>
+            <text x="70" y="45" text-anchor="middle" font-size="10" fill="#1a1a2e">exists in weights!</text>
+            <text x="70" y="70" text-anchor="middle" font-size="10" fill="#666">Now additional data</text>
+            <text x="70" y="85" text-anchor="middle" font-size="10" fill="#666">→ elicitation mode</text>
+          </g>
+
+          <!-- Bottom caption -->
+          <g transform="translate(375, 160)">
+            <text x="0" y="0" text-anchor="middle" font-size="11" fill="#1a1a2e" font-style="italic">Each new example makes ALL previous examples more informative</text>
+          </g>
+        </svg>
+        <p class="illustration-caption">Teaching: Early examples are isolated noise. As data accumulates, patterns emerge and the model builds new representations—the capability is being constructed.</p>
+      </div>
+
+      <p>This is the signature of teaching: <em>increasing returns to data</em>. Each example enables extraction of more information from all previous examples.</p>
+
+      <!-- Visualization 3: The Two Signatures -->
+      <div class="visualization" id="viz-signatures">
+        <div class="viz-title">The Two Signatures</div>
+        <div class="viz-subtitle">Compare how EDL per token scales with dataset size for elicitation (Llama) vs teaching (TinyStories).</div>
+        <div class="viz-container" id="signatures-chart"></div>
+        <div class="viz-controls">
+          <div class="toggle-group">
+            <button id="sig-llama" class="active">Llama (Elicitation)</button>
+            <button id="sig-tiny" class="active">TinyStories (Teaching)</button>
+          </div>
+          <button id="sig-overlay" class="secondary">Toggle Overlay</button>
+        </div>
+      </div>
+
+      <h3>Crossovers in Learning</h3>
+
+      <p>These signatures describe dynamical behavior—what's happening in the learning process right now—not some fixed property of the model-task pair.</p>
+
+      <p>We sometimes see <em>both</em> patterns in sequence: EDL per token decreases (elicitation), then increases (teaching), and finally decreases again (elicitation).</p>
+
+      <p>What's happening at the peak? The model has learned enough, given the data and expressive capacity of its parameters, that additional new examples are now primarily redundant rather than informative. Teaching has transitioned to elicitation.</p>
+
+      <!-- Visualization 4: The Crossover -->
+      <div class="visualization" id="viz-crossover">
+        <div class="viz-title">The Crossover</div>
+        <div class="viz-subtitle">Drag along the curve to see how the learning mechanism changes with more data.</div>
+        <div class="viz-container" id="crossover-chart"></div>
+        <div class="viz-controls">
+          <div id="crossover-state" style="font-weight: 600;">Currently: <span style="color: var(--coral);">Teaching</span></div>
+          <div>Slope: <span id="crossover-slope">+0.12</span></div>
+        </div>
+      </div>
+
+      <h3>Learning Is Relative</h3>
+
+      <p>If we had access to Llama's full pretraining trajectory, we'd presumably see teaching signatures early on—as the model first learns arithmetic—followed by elicitation signatures as arithmetic becomes latent.</p>
+
+      <p>The checkpoint we start fine-tuning from is somewhat arbitrary. There's nothing privileged about "after pretraining" versus "after 50% of pretraining" versus "after fine-tuning on task A but before task B."</p>
+
+      <p>The framework is agnostic to history. It asks: <em>right now</em>, at this point in training, is the model primarily surfacing existing capability or building new capability?</p>
+
+      <p>This means learning can also go the other direction. A model that starts in an elicitation regime—with a latent capability—might later encounter examples that reveal new structure it hadn't encoded. EDL per token would start increasing again. Teaching would resume.</p>
+
+      <p>The signatures track the dynamics of learning without requiring any information about the training history.</p>
+    </section>
+
+    <h2>Less Is All You Need (...Sometimes)</h2>
+
+    <section id="less-is-more">
+      <p>It is an empirical fact in machine learning that more is better. But when is less <em>enough</em>?</p>
+
+      <p>If elicitation surfaces capabilities that a model already has, those capabilities must already be encoded in the model's parameters. How little information is enough to unlock them?</p>
+
+      <p>We find that the answer to this question is "<em>remarkably</em> little". Often just a few bits.</p>
+
+      <h3>One Example Is All You Need</h3>
+
+      <p>How much information does a single arithmetic example contain?</p>
+
+      <p>"What is the sum of 23 and 45? 68"</p>
+
+      <p>The answer "68" comes from a space of roughly 100 possibilities (for two-digit addition). That's about 7 bits of information: log<sub>2</sub>(100) ≈ 6.6.</p>
+
+      <p><strong>Seven bits (less than a single byte!) unlocks 96% accuracy</strong> on thousands of unseen problems.</p>
+
+      <p>This is only possible if the model already knows arithmetic. The complexity needed to represent the addition algorithm is significantly larger than the information this single example can contain. The example isn't teaching addition—it's pointing to addition capability that already exists. It's saying: "When given questions in <em>this</em> format, use your arithmetic knowledge to respond in <em>that</em> format."</p>
+
+      <!-- Visualization 5: One Example Is All You Need -->
+      <div class="visualization" id="viz-one-example">
+        <div class="viz-title">One Example Is All You Need</div>
+        <div class="viz-subtitle">Compare zero-shot vs one-shot performance. Watch how a single example transforms accuracy for models with latent capability.</div>
+        <div class="viz-container" id="one-example-chart"></div>
+        <div class="viz-controls">
+          <button id="animate-bars">Replay Animation</button>
+        </div>
+      </div>
+
+      <h3>Diminishing Returns</h3>
+
+      <p>Once a capability is elicited, additional examples have sharply diminishing returns.</p>
+
+      <p>Going from 0 to 1 example might give you +65 percentage points. Going from 1 to 10 examples might give you +5 more. Going from 10 to 100 might give you +3 more.</p>
+
+      <p>This matches the elicitation signature: EDL per token decreases because each additional example is more redundant than the last. The model already knows what you're asking for; showing it more examples of the same thing doesn't help much. The information gap between the base model and the fully elicited model is small. Most of that gap closes with the first few examples. What remains is refinement.</p>
+
+      <h3>Few Parameters, Few Bits</h3>
+
+      <p>We see the same pattern when constraining parameters instead of data.</p>
+
+      <p>Training just 10 <em>randomly selected</em> parameters on the full dataset—out of billions—recovers over 90% of full fine-tuning performance for Llama 3.1 8B on arithmetic.</p>
+
+      <p>Ten parameters is roughly 160 bits of (uncompressed) storage at bfloat16 precision. But the model doesn't need to encode arithmetic in those 160 bits. It just needs to encode a small adjustment—a pointer to existing capability.</p>
+
+      <p>For TinyStories-1B? Ten parameters does nothing. The information required to encode arithmetic far exceeds what ten parameters can store, because the emergent capability doesn't exist in this model's weights. There's nothing to point to.</p>
+
+      <h3>Reasoning Is Elicitation</h3>
+
+      <p>We observe similarly dramatic performance improvements on technical and reasoning tasks when training for extended reasoning capabilities. We distill DeepSeek R1 into Qwen2.5 models by supervised fine-tuning on chain-of-thought reasoning traces generated by R1.</p>
+
+      <p>Training on a single example or fewer than 100 parameters often recovers at least 50% of the performance gap (PGR) between zero-shot and full fine-tuning performance. Just as with simpler capabilities, learning distilled reasoning becomes less efficient with additional examples, and EDL per token matches other elicitation settings.</p>
+
+      <!-- <p>A subtlety worth noting: most metrics for the capabilities we care about are not differentiable, and we may not be able to express them quantitatively anyway. Log-loss is often the best proxy we have. But natural language tasks can have many "correct" responses—different phrasings that correspond to the same answer—and the dataset selects one of these as the label. This choice of "ground truth" means that labels are noisy (they don't fully match the true distribution of correct responses), and that loss doesn't always closely track the behaviors we care about.</p> -->
+
+      <h3>Reinforcement Learning Is Elicitation (Probably)</h3>
+
+      <p>When fine-tuned in the extreme low-information elicitation regime, base models often outperform the corresponding instruction-tuned variants—even when trained on a single randomly sampled example, or when training only 10 randomly selected LoRA parameters.</p>
+
+      <p>This difference persists even after removing the confound of response format. When scoring correctness based on the model's final numerical answer (regardless of whether it follows task formatting instructions), the base model's accuracy remains higher than the instruction-tuned model's.</p>
+
+      <p>Though the instruction-tuned models can output correctly-formatted responses zero-shot, their accuracies are often lower. This indicates that elicitation of the base model, in addition to aligning outputs to the task format (<em>format-specific</em> improvement), may also surface improved <em>capability-specific</em> performance. In other words, post-training and reinforcement learning from human feedback may, in some cases, have traded raw capability for instruction-following—and elicitation can recover it.</p>
+    </section>
+
+    <h2>More Is Necessary?</h2>
+
+    <section id="teaching-requirements">
+      <p>When capabilities are absent, information requirements change dramatically.</p>
+
+      <h3>Why Teaching Requires More</h3>
+
+      <p>TinyStories-1B must learn arithmetic from scratch. It has never seen numbers. It doesn't know what addition means. Every component of the capability must be constructed during fine-tuning.</p>
+
+      <p>This requires substantially more information:</p>
+
+      <ul>
+        <li>Where Llama needs ~1 example to reach good performance, TinyStories needs ~10,000 to predict with nontrivial accuracy</li>
+        <li>Where Llama needs ~10 parameters to capture the task, TinyStories needs ~1M+ to substantially improve accuracy</li>
+      </ul>
+
+      <p>Think about what the model must encode:</p>
+
+      <ol>
+        <li>What numbers are (the digits 0–9 and their meanings)</li>
+        <li>What addition means (the algorithm, or at least the input-output mapping)</li>
+        <li>How to parse natural language arithmetic questions</li>
+        <li>How to format numerical answers</li>
+      </ol>
+
+      <p>Each of these is complex and requires information to specify. TinyStories-1B starts with none of this information.</p>
+
+      <h3>Learning Capacity Limits for Teaching</h3>
+
+      <p>When teaching, models can absorb roughly <strong>1–2 bits of information per trainable parameter</strong> before hitting capacity limits.</p>
+
+      <p>Our teaching results match this bound: models in the teaching regime can compress up to ~1 bit/parameter into their adapters before performance degrades.</p>
+
+      <p>But models in the elicitation regime saturate at a much lower threshold: <strong>~0.01–0.1 bits/parameter</strong>.</p>
+
+      <p>Why the difference? Elicitation doesn't require encoding the capability itself—only a pointer to existing capability. Pointers are cheap. Capabilities are expensive.</p>
+    </section>
+
+    <h2>A Tale of Two Models</h2>
+
+    <section id="causal-intervention">
+      <p>Correlation isn't causation. Maybe Llama and TinyStories differ in ways unrelated to latent capability that happen to produce different EDL patterns.</p>
+
+      <p>To establish causality, we perform an intervention: take a model that shows teaching signatures, pre-teach it the relevant capability, and verify that its signatures shift to elicitation.</p>
+
+      <h3>The Experiment</h3>
+
+      <p><strong>Step 1:</strong> Train TinyStories-1B on arithmetic using operator notation ("3 × 4 = 12"). Track EDL. Observe teaching signatures: increasing EDL per token as the model learns to multiply.</p>
+
+      <p><strong>Step 2:</strong> Take this pre-taught model. Now fine-tune it on arithmetic using natural language ("What is the product of 3 and 4?"). Track EDL.</p>
+
+      <p><strong>Result:</strong> The pre-taught model shows elicitation signatures. EDL per token starts low and decreases monotonically. The capacity threshold drops from ~1 bit/parameter to ~0.05 bits/parameter.</p>
+
+      <p>We use the same architecture, same task (natural language arithmetic), and same training procedure, where the only difference is whether the capability was pre-taught.</p>
+
+      <p><strong>Pre-teaching converts a teaching task into an elicitation task.</strong></p>
+
+      <!-- Visualization 6: The Causal Intervention -->
+      <div class="visualization" id="viz-intervention">
+        <div class="viz-title">The Causal Intervention</div>
+        <div class="viz-subtitle">Watch how pre-teaching transforms the learning signature. Drag the slider to morph between before and after.</div>
+        <div class="viz-container" id="intervention-chart"></div>
+        <div class="viz-controls">
+          <label>Pre-teaching progress: <input type="range" id="intervention-slider" min="0" max="100" value="0"></label>
+          <span id="intervention-state">Before: Teaching signature</span>
+        </div>
+      </div>
+    </section>
+
+    <h2>Parameter Capacity Limits</h2>
+
+    <section id="capacity-limits">
+      <p>When fine-tuning with LoRA, how large of an adapter do you need?</p>
+
+      <h3>The Capacity Curve</h3>
+
+      <p>Plot the fraction of information full fine-tuning extracts from a dataset (we call this "capacity") against EDL per trainable parameter. You'll see a characteristic shape:</p>
+
+      <ul>
+        <li><strong>Below threshold:</strong> Capacity ≈ 1. The adapter can learn everything the model can learn from the data. You're not capacity-limited.</li>
+        <li><strong>Above threshold:</strong> Capacity drops sharply. The adapter is saturated. You're trying to store more bits than the parameters can hold.</li>
+      </ul>
+
+      <p>The threshold is the learning capacity limit—the point where learning significantly slows down and parameter-efficient fine-tuning starts to underperform.</p>
+
+      <h3>Learning Capacity Depends on the Learning Regime</h3>
+
+      <p>The learning capacity limit differs by <strong>two orders of magnitude</strong> between elicitation and teaching:</p>
+
+      <ul>
+        <li><strong>Elicitation:</strong> ~0.01 bits/parameter</li>
+        <li><strong>Teaching:</strong> ~1+ bit/parameter</li>
+      </ul>
+
+      <!-- Visualization 7: The Capacity Cliff -->
+      <div class="visualization" id="viz-capacity">
+        <div class="viz-title">The Capacity Cliff</div>
+        <div class="viz-subtitle">See how capacity drops sharply when EDL per parameter exceeds the threshold.</div>
+        <div class="viz-container" id="capacity-chart"></div>
+        <div class="viz-controls">
+          <div class="toggle-group">
+            <button id="cap-elicit" class="active">Elicitation</button>
+            <button id="cap-teach" class="active">Teaching</button>
+          </div>
+          <label>Filter by rank: <select id="rank-filter">
+            <option value="all">All ranks</option>
+            <option value="4">Rank 4</option>
+            <option value="16">Rank 16</option>
+            <option value="64">Rank 64</option>
+            <option value="256">Rank 256</option>
+          </select></label>
+        </div>
+      </div>
+
+      <h3>Larger Models Have Lower Capacity Thresholds</h3>
+
+      <p>Within the elicitation regime, larger models have even lower capacity thresholds. Larger models have more preexisting capability—more latent structure to point to. The "pointer" to this complexity can be even more compact.</p>
+
+      <p>This is counterintuitive: you might expect larger models to need more parameters to fine-tune. But if the capability is latent, the opposite is true. The more the model already knows, the less you need to tell it.</p>
+
+      <h3>Practical Guidance</h3>
+
+      <p>This gives us a recipe for choosing adapter size:</p>
+
+      <ol>
+        <li><strong>Run a pilot training run.</strong> Fine-tune with high-rank LoRA (or full fine-tuning) on a subset of your data. Compute EDL from the training logs.</li>
+        <li><strong>Classify the regime.</strong> Plot EDL per token versus dataset size. Is it decreasing (elicitation) or increasing (teaching)?</li>
+        <li><strong>Estimate required capacity.</strong>
+          <ul>
+            <li><strong>Elicitation:</strong> Choose rank so that EDL/P &lt; 0.1 bits/parameter</li>
+            <li><strong>Teaching:</strong> Choose rank so that EDL/P ~1+ bit/parameter</li>
+          </ul>
+        </li>
+        <li><strong>Validate.</strong> Compare your predicted adapter size to empirical performance. Adjust if needed.</li>
+      </ol>
+
+      <!-- Visualization 8: Adapter Size Calculator -->
+      <div class="visualization" id="viz-calculator">
+        <div class="viz-title">Adapter Size Calculator</div>
+        <div class="viz-subtitle">Estimate the LoRA rank needed for your fine-tuning task.</div>
+        <div class="calculator">
+          <div class="calc-inputs">
+            <div class="calc-input-group">
+              <label>Estimated EDL (bits)</label>
+              <input type="number" id="calc-edl" value="10000" min="0">
+            </div>
+            <div class="calc-input-group">
+              <label>Model Size</label>
+              <select id="calc-model">
+                <option value="1000000000">1B parameters</option>
+                <option value="3000000000">3B parameters</option>
+                <option value="8000000000" selected>8B parameters</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="calc-input-group" id="custom-params-group" style="display: none;">
+              <label>Custom model parameters</label>
+              <input type="number" id="calc-custom-params" value="8000000000">
+            </div>
+            <div class="calc-input-group">
+              <label>Learning Regime</label>
+              <select id="calc-regime">
+                <option value="elicitation">Elicitation (~0.05 bits/param threshold)</option>
+                <option value="teaching">Teaching (~1 bit/param threshold)</option>
+                <option value="auto">Auto-detect from EDL</option>
+              </select>
+            </div>
+            <div class="calc-input-group">
+              <label>Target Capacity: <span id="target-cap-display">0.95</span></label>
+              <input type="range" id="calc-target" min="0.5" max="1" step="0.01" value="0.95">
+            </div>
+          </div>
+          <div class="calc-output">
+            <div>Recommended LoRA Rank</div>
+            <div class="calc-result" id="calc-rank">64</div>
+            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-light);">
+              Trainable parameters: <span id="calc-params">~33M</span>
+            </div>
+            <div class="calc-warning" id="calc-warning" style="display: none;"></div>
+            <div class="viz-container" id="calc-viz" style="height: 150px; margin-top: 1rem;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <h2>Implications</h2>
+
+    <section id="implications">
+      <h3>For Safety Evaluation</h3>
+
+      <p>Our findings suggest caution about fine-tuning-based capability evaluations.</p>
+
+      <p>If your evaluation procedure shows teaching signatures—increasing EDL per token, high capacity thresholds—you may be measuring what the model can learn rather than what it already knows. The evaluation is potentially teaching capabilities it's supposed to be detecting.</p>
+
+      <p>For faithful capability assessment, evaluations should target the elicitation regime: use minimal data, monitor for teaching signatures, and verify that results are stable to further training.</p>
+
+      <h3>For Risk Assessment</h3>
+
+      <p>The asymmetry between elicitation and teaching has direct safety implications.</p>
+
+      <p>If a dangerous capability is latent—encoded in the weights during pretraining—it may be surfaced with minimal intervention:</p>
+
+      <ul>
+        <li>A few examples of the undesired behavior</li>
+        <li>A jailbreak prompt that points to existing knowledge</li>
+        <li>A deployment context that accidentally activates latent capability</li>
+      </ul>
+
+      <p>The information barrier is low: potentially just a few bits.</p>
+
+      <p>If the capability must be taught, the barrier is substantially higher: orders of magnitude more information, extensive training, and specialized data. This is more predictable and easier to defend against.</p>
+
+      <p>Understanding which capabilities are latent versus absent in deployed models is therefore critical for informed risk assessment.</p>
+
+      <h3>For Understanding Reasoning</h3>
+
+      <p>Our analysis of reasoning model distillation (using DeepSeek R1 distilled into Qwen models) shows capacity thresholds characteristic of elicitation: ~0.05 bits/parameter.</p>
+
+      <p>This suggests that chain-of-thought reasoning capabilities may be largely latent in capable base models, waiting to be surfaced through appropriate fine-tuning rather than built from scratch.</p>
+
+      <p>This has implications for understanding how reasoning capabilities propagate through the training pipeline, whether expensive RL-based reasoning improvements could be achieved through cheaper elicitation methods, and how well RL may be capable of teaching genuinely new capabilities.</p>
+
+      <h3>For Efficiency</h3>
+
+      <p>Many practitioners over-train on elicitation tasks. If your capability is latent, massive datasets and high-rank adapters are wasteful. Our results suggest that for elicitation, ranks 1–8 often suffice to attain maximum performance, and a few hundred examples may be enough. For teaching, high-rank adapters and large datasets are necessary. EDL provides a principled way to distinguish these cases <em>before</em> committing to expensive training runs.</p>
+    </section>
+
+    <h2>Caveats and Nuances</h2>
+
+    <section id="caveats">
+      <p>We emphasize several limitations and subtleties.</p>
+
+      <p><strong>The boundary is fuzzy.</strong> Elicitation and teaching are useful abstractions, but real learning probably involves both mechanisms in varying proportions. The signatures reveal the <em>predominant</em> mechanism, not a strict dichotomy.</p>
+
+      <p><strong>What we measure is learning efficiency, not model cognition.</strong> We don't claim a mechanistically interpretable understanding of what representations exist or how they change during elicitation versus teaching. We observe that different amounts of information produce different amounts of generalization, and that this varies systematically with pretraining.</p>
+
+      <p><strong>EDL depends on training details.</strong> Different optimizers, learning rates, and schedules could yield different EDL values for the same model and data. EDL measures information absorbed <em>by this training run</em>. This is important: if EDL instead measured some fundamental property of the task, elicitation and teaching would yield similar values.</p>
+
+      <p><strong>Our experiments focus on specific domains.</strong> Arithmetic and reasoning tasks have clean structure that may not generalize to all capabilities. Messier, more naturalistic capabilities could behave differently.</p>
+
+      <p><strong>Capability ceilings are model-relative.</strong> A model that has learned "all it can" about arithmetic might plateau at 80% accuracy while a larger model reaches 95%. Elicitation is relative to each model's own ceiling, not absolute task performance.</p>
+
+      <p><strong>EDL measures information learned, not capability.</strong> Loss and EDL are proxies for the underlying capabilities we care about. They measure how much information the model is absorbing from the data, but they don't directly measure the presence or absence of specific capabilities. A model might have a latent capability that isn't perfectly captured by the loss metric, or it might learn to exploit spurious correlations or structure in the data that improve loss without improving true capability.</p>
+
+      <p>Despite these limitations, we believe EDL provides a useful quantitative framework for thinking about learning—one that makes testable predictions and offers practical guidance.</p>
+    </section>
+
+    <h2>Conclusion</h2>
+
+    <section id="conclusion">
+      <p>Learning is compression. When models learn, they compress predictive information from data into parameters.</p>
+
+      <p><em>Excess description length</em> measures this compression: the bits that count toward generalization rather than memorization.</p>
+
+      <p>The central thread of this work connects three ideas about scale and complexity. First, Anderson's principle that <em>more is different</em>: scale produces emergence, giving rise to complex capabilities in pretrained models that are qualitatively different from anything present in the individual training examples. Second, our finding that when this emergent complexity already exists, <em>less is all you need</em>: remarkably little information—sometimes a single example, sometimes just a few bits—suffices to surface capabilities that took billions of tokens to create. Third, our finding that when this complexity is absent, <em>more is necessary</em>: there is no shortcut past the information cost of building new emergent structure.</p>
+
+      <p>EDL gives us a way to measure which regime we're in, and these measurements reveal clear dynamical signatures. Elicitation—surfacing existing emergent capability—produces decreasing EDL per token and capacity thresholds of ~0.01–0.1 bits/parameter. Teaching—building new capability—produces increasing EDL per token and capacity thresholds of ~1 bit/parameter. These signatures are causal: pre-teaching a capability shifts the signature from teaching to elicitation.</p>
+
+      <p>The practical implications follow directly. For safety evaluations, monitor for teaching signatures to ensure you're measuring what a model knows rather than what it can learn. For risk assessment, recognize that latent capabilities sit behind a thin information barrier. For efficiency, match your training resources to the actual learning regime rather than defaulting to more data and more parameters.</p>
+
+      <p>The framework gives us a language—grounded in information theory—for asking precise questions about how models learn. We hope it proves useful.</p>
+    </section>
+
+    <div class="footnote">
+      <p><sup>[1]</sup> In practice, hyperparameters like learning rate, batch size, and random seed would also need to be communicated. We assume these are fixed and known to both parties.</p>
+      <p><sup>[2]</sup> The reconstruction is approximate due to floating-point precision, but the principle holds.</p>
+    </div>
+  </article>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    // ============================================================
+    // DATA GENERATION
+    // ============================================================
+    // Synthetic data designed to match the qualitative patterns from the paper.
+    // Each dataset documents its format for easy replacement with real W&B data.
+
+    /*
+     * DATA FORMAT: mdlData
+     * Array of {step: number, loss: number}
+     * Represents training loss over first epoch
+     */
+    function generateMDLData(numSteps = 100) {
+      const data = [];
+      let loss = 2.5; // Starting loss
+      for (let i = 0; i <= numSteps; i++) {
+        data.push({ step: i, loss: loss });
+        // Exponential decay with some noise
+        loss = Math.max(0.3, loss * (0.97 + Math.random() * 0.02) - 0.005);
+      }
+      return data;
+    }
+
+    /*
+     * DATA FORMAT: signaturesData
+     * {
+     *   llama: [{n: number, edl_per_token: number}, ...],
+     *   tinystories: [{n: number, edl_per_token: number}, ...]
+     * }
+     * Log-scale dataset sizes (n), EDL per token
+     */
+    function generateSignaturesData() {
+      const llama = [];
+      const tinystories = [];
+      const sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+
+      sizes.forEach(n => {
+        // Llama: elicitation signature (decreasing)
+        const llamaEdl = 0.8 / Math.pow(n, 0.3) + 0.02 + (Math.random() - 0.5) * 0.02;
+        llama.push({ n, edl_per_token: llamaEdl });
+
+        // TinyStories: teaching signature (increasing then plateau)
+        let tinyEdl;
+        if (n < 1000) {
+          tinyEdl = 0.02 + 0.15 * Math.log10(n) + (Math.random() - 0.5) * 0.02;
+        } else {
+          tinyEdl = 0.45 + (Math.random() - 0.5) * 0.03;
+        }
+        tinystories.push({ n, edl_per_token: tinyEdl });
+      });
+
+      return { llama, tinystories };
+    }
+
+    /*
+     * DATA FORMAT: crossoverData
+     * Array of {n: number, edl_per_token: number, slope: number}
+     * Shows teaching -> elicitation transition
+     */
+    function generateCrossoverData() {
+      const data = [];
+      const sizes = [];
+      for (let i = 0; i <= 50; i++) {
+        sizes.push(Math.pow(10, i / 12.5)); // Log scale from 1 to ~10000
+      }
+
+      sizes.forEach((n, i) => {
+        // Teaching phase (increasing), then elicitation (decreasing)
+        const peak = 25; // Peak around n=~300
+        let edl;
+        if (i < peak) {
+          edl = 0.05 + 0.4 * Math.pow(i / peak, 1.5);
+        } else {
+          edl = 0.45 - 0.3 * Math.pow((i - peak) / (50 - peak), 0.8);
+        }
+        edl += (Math.random() - 0.5) * 0.02;
+
+        const slope = i < peak ? 0.1 : -0.08;
+        data.push({ n, edl_per_token: edl, slope });
+      });
+
+      return data;
+    }
+
+    /*
+     * DATA FORMAT: oneExampleData
+     * Array of {model: string, zero_shot: number, one_shot: number}
+     * Accuracy values 0-1
+     */
+    function generateOneExampleData() {
+      return [
+        { model: 'Llama 8B', zero_shot: 0.00, one_shot: 0.96 },
+        { model: 'Llama 3B', zero_shot: 0.00, one_shot: 0.88 },
+        { model: 'Llama 1B', zero_shot: 0.00, one_shot: 0.67 },
+        { model: 'TinyStories', zero_shot: 0.00, one_shot: 0.02 }
+      ];
+    }
+
+    /*
+     * DATA FORMAT: interventionData
+     * {
+     *   before: [{n: number, edl_per_token: number}, ...],
+     *   after: [{n: number, edl_per_token: number}, ...]
+     * }
+     * Before = teaching, After = elicitation
+     */
+    function generateInterventionData() {
+      const sizes = [1, 5, 10, 50, 100, 500, 1000, 5000, 10000];
+      const before = [];
+      const after = [];
+
+      sizes.forEach(n => {
+        // Before: teaching signature
+        const beforeEdl = 0.02 + 0.12 * Math.log10(n) + (Math.random() - 0.5) * 0.01;
+        before.push({ n, edl_per_token: beforeEdl });
+
+        // After: elicitation signature
+        const afterEdl = 0.5 / Math.pow(n, 0.35) + 0.01 + (Math.random() - 0.5) * 0.01;
+        after.push({ n, edl_per_token: afterEdl });
+      });
+
+      return { before, after };
+    }
+
+    /*
+     * DATA FORMAT: capacityData
+     * Array of {edl_per_param: number, capacity: number, rank: number, regime: string}
+     * edl_per_param on log scale, capacity 0-1
+     */
+    function generateCapacityData() {
+      const data = [];
+      const ranks = [4, 16, 64, 256];
+
+      // Elicitation regime - threshold around 0.05
+      for (let i = 0; i < 30; i++) {
+        const edlPerParam = Math.pow(10, -4 + i * 0.15);
+        const threshold = 0.05;
+        const capacity = edlPerParam < threshold ?
+          0.95 + Math.random() * 0.05 :
+          Math.max(0.1, 0.95 - (edlPerParam - threshold) * 5 + Math.random() * 0.1);
+        data.push({
+          edl_per_param: edlPerParam,
+          capacity: Math.min(1, capacity),
+          rank: ranks[Math.floor(Math.random() * ranks.length)],
+          regime: 'elicitation'
+        });
+      }
+
+      // Teaching regime - threshold around 1
+      for (let i = 0; i < 30; i++) {
+        const edlPerParam = Math.pow(10, -1 + i * 0.1);
+        const threshold = 1;
+        const capacity = edlPerParam < threshold ?
+          0.9 + Math.random() * 0.1 :
+          Math.max(0.15, 0.9 - (edlPerParam - threshold) * 0.3 + Math.random() * 0.1);
+        data.push({
+          edl_per_param: edlPerParam,
+          capacity: Math.min(1, capacity),
+          rank: ranks[Math.floor(Math.random() * ranks.length)],
+          regime: 'teaching'
+        });
+      }
+
+      return data;
+    }
+
+    // ============================================================
+    // VISUALIZATION HELPERS
+    // ============================================================
+
+    const colors = {
+      coral: '#D97757',
+      coralLight: '#E89B7E',
+      coralDark: '#B85A3C',
+      darkBlue: '#1a1a2e',
+      cream: '#FAF8F5',
+      creamDark: '#F0EDE8',
+      blue: '#4A90D9',
+      orange: '#E8A838'
+    };
+
+    const tooltip = d3.select('#tooltip');
+
+    function showTooltip(event, html) {
+      tooltip
+        .html(html)
+        .style('opacity', 1)
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY - 10) + 'px');
+    }
+
+    function hideTooltip() {
+      tooltip.style('opacity', 0);
+    }
+
+    // ============================================================
+    // VISUALIZATION 1: ACCUMULATING MDL
+    // ============================================================
+
+    function initMDLVisualization() {
+      const container = d3.select('#mdl-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+
+      const data = generateMDLData();
+      const maxStep = data.length - 1;
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLinear()
+        .domain([0, maxStep])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.loss) * 1.1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(10))
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', 35)
+        .attr('fill', 'currentColor')
+        .text('Training Step');
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5))
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -45)
+        .attr('fill', 'currentColor')
+        .text('Loss (nats)');
+
+      // Area for MDL
+      const area = d3.area()
+        .x(d => x(d.step))
+        .y0(height - margin.bottom)
+        .y1(d => y(d.loss));
+
+      const areaPath = svg.append('path')
+        .datum(data.slice(0, 1))
+        .attr('fill', colors.coralLight)
+        .attr('opacity', 0.5)
+        .attr('d', area);
+
+      // Line for loss curve
+      const line = d3.line()
+        .x(d => x(d.step))
+        .y(d => y(d.loss));
+
+      const linePath = svg.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', colors.coral)
+        .attr('stroke-width', 2)
+        .attr('d', line);
+
+      // Current position marker
+      const marker = svg.append('circle')
+        .attr('cx', x(0))
+        .attr('cy', y(data[0].loss))
+        .attr('r', 6)
+        .attr('fill', colors.coral);
+
+      // Update function
+      function updateVisualization(step) {
+        const currentData = data.slice(0, step + 1);
+        areaPath.datum(currentData).attr('d', area);
+        marker.attr('cx', x(step)).attr('cy', y(data[step].loss));
+
+        // Calculate MDL (area under curve)
+        let mdl = 0;
+        for (let i = 0; i <= step; i++) {
+          mdl += data[i].loss;
+        }
+
+        document.getElementById('mdl-step-display').textContent = step;
+        document.getElementById('mdl-value').textContent = mdl.toFixed(1);
+      }
+
+      // Slider control
+      const slider = document.getElementById('mdl-slider');
+      slider.max = maxStep;
+      slider.addEventListener('input', (e) => {
+        updateVisualization(parseInt(e.target.value));
+      });
+
+      // Play button
+      let playing = false;
+      let playInterval;
+      const playBtn = document.getElementById('mdl-play');
+
+      playBtn.addEventListener('click', () => {
+        if (playing) {
+          clearInterval(playInterval);
+          playBtn.textContent = 'Play';
+          playing = false;
+        } else {
+          let step = parseInt(slider.value);
+          if (step >= maxStep) step = 0;
+          playBtn.textContent = 'Pause';
+          playing = true;
+
+          playInterval = setInterval(() => {
+            step++;
+            if (step > maxStep) {
+              clearInterval(playInterval);
+              playBtn.textContent = 'Play';
+              playing = false;
+              return;
+            }
+            slider.value = step;
+            updateVisualization(step);
+          }, 50);
+        }
+      });
+    }
+
+    // ============================================================
+    // VISUALIZATION 2: MDL/EDL DECOMPOSITION
+    // ============================================================
+
+    function initEDLDecomposition() {
+      const container = d3.select('#edl-decomp-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+
+      const data = generateMDLData();
+      let lTest = 0.8;
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLinear()
+        .domain([0, data.length - 1])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.loss) * 1.1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(10));
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5));
+
+      // MDL area (full area under curve)
+      const mdlArea = d3.area()
+        .x(d => x(d.step))
+        .y0(height - margin.bottom)
+        .y1(d => y(d.loss));
+
+      const mdlPath = svg.append('path')
+        .datum(data)
+        .attr('class', 'mdl-area')
+        .attr('fill', colors.creamDark)
+        .attr('stroke', 'none')
+        .attr('d', mdlArea);
+
+      // EDL area (area above L_test line)
+      const edlArea = d3.area()
+        .x(d => x(d.step))
+        .y0(d => y(Math.min(d.loss, lTest)))
+        .y1(d => y(d.loss));
+
+      const edlPath = svg.append('path')
+        .datum(data)
+        .attr('class', 'edl-area')
+        .attr('fill', colors.coralLight)
+        .attr('opacity', 0)
+        .attr('d', edlArea);
+
+      // Loss curve
+      const line = d3.line()
+        .x(d => x(d.step))
+        .y(d => y(d.loss));
+
+      svg.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', colors.coral)
+        .attr('stroke-width', 2)
+        .attr('d', line);
+
+      // L_test line
+      const lTestLine = svg.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', width - margin.right)
+        .attr('y1', y(lTest))
+        .attr('y2', y(lTest))
+        .attr('stroke', colors.darkBlue)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+
+      const lTestLabel = svg.append('text')
+        .attr('x', width - margin.right - 5)
+        .attr('y', y(lTest) - 5)
+        .attr('text-anchor', 'end')
+        .attr('font-size', '12px')
+        .attr('fill', colors.darkBlue)
+        .text('L_test');
+
+      // View mode state
+      let viewMode = 'mdl';
+
+      function updateView() {
+        mdlPath.attr('opacity', viewMode === 'mdl' || viewMode === 'both' ? 0.5 : 0);
+        edlPath.attr('opacity', viewMode === 'edl' || viewMode === 'both' ? 0.7 : 0);
+      }
+
+      function updateLTest(newLTest) {
+        lTest = newLTest;
+        lTestLine.attr('y1', y(lTest)).attr('y2', y(lTest));
+        lTestLabel.attr('y', y(lTest) - 5);
+
+        const edlAreaUpdated = d3.area()
+          .x(d => x(d.step))
+          .y0(d => y(Math.min(d.loss, lTest)))
+          .y1(d => y(d.loss));
+
+        edlPath.attr('d', edlAreaUpdated(data));
+      }
+
+      // Toggle buttons
+      document.getElementById('show-mdl').addEventListener('click', function() {
+        viewMode = 'mdl';
+        updateView();
+        document.querySelectorAll('#viz-edl-decomp .toggle-group button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+
+      document.getElementById('show-edl').addEventListener('click', function() {
+        viewMode = 'edl';
+        updateView();
+        document.querySelectorAll('#viz-edl-decomp .toggle-group button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+
+      document.getElementById('show-both').addEventListener('click', function() {
+        viewMode = 'both';
+        updateView();
+        document.querySelectorAll('#viz-edl-decomp .toggle-group button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+
+      // L_test slider
+      const lTestSlider = document.getElementById('ltest-slider');
+      const lTestDisplay = document.getElementById('ltest-display');
+
+      lTestSlider.addEventListener('input', (e) => {
+        const newLTest = parseFloat(e.target.value);
+        lTestDisplay.textContent = newLTest.toFixed(2);
+        updateLTest(newLTest);
+      });
+
+      updateView();
+    }
+
+    // ============================================================
+    // VISUALIZATION 3: THE TWO SIGNATURES
+    // ============================================================
+
+    function initSignaturesVisualization() {
+      const container = d3.select('#signatures-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 350;
+      const margin = { top: 30, right: 30, bottom: 50, left: 70 };
+
+      const data = generateSignaturesData();
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLog()
+        .domain([1, 10000])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, 0.6])
+        .range([height - margin.bottom, margin.top]);
+
+      // Grid
+      svg.append('g')
+        .attr('class', 'grid')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5).tickSize(-(height - margin.top - margin.bottom)).tickFormat(''));
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5, '~s'))
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', 40)
+        .attr('fill', 'currentColor')
+        .text('Number of training examples');
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(6))
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -50)
+        .attr('fill', 'currentColor')
+        .text('EDL per token');
+
+      // Lines
+      const line = d3.line()
+        .x(d => x(d.n))
+        .y(d => y(d.edl_per_token));
+
+      const llamaPath = svg.append('path')
+        .datum(data.llama)
+        .attr('class', 'llama-line')
+        .attr('fill', 'none')
+        .attr('stroke', colors.blue)
+        .attr('stroke-width', 2.5)
+        .attr('d', line);
+
+      const tinyPath = svg.append('path')
+        .datum(data.tinystories)
+        .attr('class', 'tiny-line')
+        .attr('fill', 'none')
+        .attr('stroke', colors.orange)
+        .attr('stroke-width', 2.5)
+        .attr('d', line);
+
+      // Points
+      const llamaPoints = svg.selectAll('.llama-point')
+        .data(data.llama)
+        .join('circle')
+        .attr('class', 'llama-point')
+        .attr('cx', d => x(d.n))
+        .attr('cy', d => y(d.edl_per_token))
+        .attr('r', 5)
+        .attr('fill', colors.blue)
+        .on('mouseover', (event, d) => {
+          showTooltip(event, `n=${d.n}<br>EDL/token=${d.edl_per_token.toFixed(3)}`);
+        })
+        .on('mouseout', hideTooltip);
+
+      const tinyPoints = svg.selectAll('.tiny-point')
+        .data(data.tinystories)
+        .join('circle')
+        .attr('class', 'tiny-point')
+        .attr('cx', d => x(d.n))
+        .attr('cy', d => y(d.edl_per_token))
+        .attr('r', 5)
+        .attr('fill', colors.orange)
+        .on('mouseover', (event, d) => {
+          showTooltip(event, `n=${d.n}<br>EDL/token=${d.edl_per_token.toFixed(3)}`);
+        })
+        .on('mouseout', hideTooltip);
+
+      // Annotations
+      svg.append('text')
+        .attr('x', x(3))
+        .attr('y', y(0.55))
+        .attr('font-size', '12px')
+        .attr('fill', colors.blue)
+        .text('Llama (Elicitation)');
+
+      svg.append('text')
+        .attr('x', x(500))
+        .attr('y', y(0.48))
+        .attr('font-size', '12px')
+        .attr('fill', colors.orange)
+        .text('TinyStories (Teaching)');
+
+      // Region annotations
+      svg.append('text')
+        .attr('class', 'annotation')
+        .attr('x', x(2))
+        .attr('y', margin.top + 10)
+        .attr('font-size', '11px')
+        .text('Elicitation zone');
+
+      svg.append('path')
+        .attr('d', `M ${x(2)} ${margin.top + 15} L ${x(2)} ${y(0.45)}`)
+        .attr('stroke', colors.blue)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '3,3')
+        .attr('opacity', 0.5);
+
+      // Toggle visibility
+      let showLlama = true;
+      let showTiny = true;
+
+      function updateVisibility() {
+        llamaPath.attr('opacity', showLlama ? 1 : 0);
+        llamaPoints.attr('opacity', showLlama ? 1 : 0);
+        tinyPath.attr('opacity', showTiny ? 1 : 0);
+        tinyPoints.attr('opacity', showTiny ? 1 : 0);
+      }
+
+      document.getElementById('sig-llama').addEventListener('click', function() {
+        showLlama = !showLlama;
+        this.classList.toggle('active', showLlama);
+        updateVisibility();
+      });
+
+      document.getElementById('sig-tiny').addEventListener('click', function() {
+        showTiny = !showTiny;
+        this.classList.toggle('active', showTiny);
+        updateVisibility();
+      });
+    }
+
+    // ============================================================
+    // VISUALIZATION 4: THE CROSSOVER
+    // ============================================================
+
+    function initCrossoverVisualization() {
+      const container = d3.select('#crossover-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 30, right: 30, bottom: 40, left: 60 };
+
+      const data = generateCrossoverData();
+      const peakIdx = data.findIndex((d, i, arr) =>
+        i > 0 && i < arr.length - 1 &&
+        d.edl_per_token > arr[i-1].edl_per_token &&
+        d.edl_per_token > arr[i+1].edl_per_token
+      ) || 25;
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLog()
+        .domain([d3.min(data, d => d.n), d3.max(data, d => d.n)])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.edl_per_token) * 1.1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5, '~s'));
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5));
+
+      // Teaching region (before peak)
+      const teachingArea = d3.area()
+        .x(d => x(d.n))
+        .y0(height - margin.bottom)
+        .y1(d => y(d.edl_per_token));
+
+      svg.append('path')
+        .datum(data.slice(0, peakIdx + 1))
+        .attr('fill', colors.orange)
+        .attr('opacity', 0.2)
+        .attr('d', teachingArea);
+
+      // Elicitation region (after peak)
+      svg.append('path')
+        .datum(data.slice(peakIdx))
+        .attr('fill', colors.blue)
+        .attr('opacity', 0.2)
+        .attr('d', teachingArea);
+
+      // Line
+      const line = d3.line()
+        .x(d => x(d.n))
+        .y(d => y(d.edl_per_token))
+        .curve(d3.curveMonotoneX);
+
+      svg.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', colors.darkBlue)
+        .attr('stroke-width', 2.5)
+        .attr('d', line);
+
+      // Peak marker
+      svg.append('text')
+        .attr('x', x(data[peakIdx].n))
+        .attr('y', y(data[peakIdx].edl_per_token) - 15)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '16px')
+        .text('★');
+
+      svg.append('text')
+        .attr('x', x(data[peakIdx].n))
+        .attr('y', y(data[peakIdx].edl_per_token) - 30)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '11px')
+        .attr('fill', colors.darkBlue)
+        .text('Capability acquired');
+
+      // Draggable cursor
+      const cursor = svg.append('g')
+        .attr('class', 'cursor');
+
+      cursor.append('line')
+        .attr('y1', margin.top)
+        .attr('y2', height - margin.bottom)
+        .attr('stroke', colors.coral)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '4,4');
+
+      cursor.append('circle')
+        .attr('r', 8)
+        .attr('fill', colors.coral)
+        .attr('cursor', 'ew-resize');
+
+      let currentIdx = 10;
+
+      function updateCursor(idx) {
+        currentIdx = Math.max(0, Math.min(data.length - 1, idx));
+        const d = data[currentIdx];
+
+        cursor.attr('transform', `translate(${x(d.n)}, 0)`);
+        cursor.select('circle').attr('cy', y(d.edl_per_token));
+
+        const isTeaching = currentIdx < peakIdx;
+        document.getElementById('crossover-state').innerHTML =
+          `Currently: <span style="color: ${isTeaching ? colors.orange : colors.blue};">${isTeaching ? 'Teaching' : 'Eliciting'}</span>`;
+
+        const slope = currentIdx > 0 ?
+          (d.edl_per_token - data[currentIdx - 1].edl_per_token) /
+          (Math.log10(d.n) - Math.log10(data[currentIdx - 1].n)) : 0;
+        document.getElementById('crossover-slope').textContent =
+          (slope >= 0 ? '+' : '') + slope.toFixed(3);
+      }
+
+      // Drag behavior
+      const drag = d3.drag()
+        .on('drag', function(event) {
+          const mouseX = event.x;
+          const n = x.invert(mouseX);
+          const idx = data.findIndex(d => d.n >= n);
+          updateCursor(idx >= 0 ? idx : data.length - 1);
+        });
+
+      cursor.call(drag);
+
+      // Click to position
+      svg.on('click', function(event) {
+        const [mouseX] = d3.pointer(event);
+        if (mouseX >= margin.left && mouseX <= width - margin.right) {
+          const n = x.invert(mouseX);
+          const idx = data.findIndex(d => d.n >= n);
+          updateCursor(idx >= 0 ? idx : data.length - 1);
+        }
+      });
+
+      updateCursor(10);
+    }
+
+    // ============================================================
+    // VISUALIZATION 5: ONE EXAMPLE IS ALL YOU NEED
+    // ============================================================
+
+    function initOneExampleVisualization() {
+      const container = d3.select('#one-example-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+
+      const data = generateOneExampleData();
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x0 = d3.scaleBand()
+        .domain(data.map(d => d.model))
+        .range([margin.left, width - margin.right])
+        .padding(0.3);
+
+      const x1 = d3.scaleBand()
+        .domain(['zero_shot', 'one_shot'])
+        .range([0, x0.bandwidth()])
+        .padding(0.1);
+
+      const y = d3.scaleLinear()
+        .domain([0, 1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x0))
+        .selectAll('text')
+        .attr('transform', 'rotate(-15)')
+        .style('text-anchor', 'end');
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).tickFormat(d3.format('.0%')));
+
+      // Legend
+      const legend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right - 150}, ${margin.top})`);
+
+      legend.append('rect').attr('x', 0).attr('y', 0).attr('width', 15).attr('height', 15).attr('fill', '#ccc');
+      legend.append('text').attr('x', 20).attr('y', 12).attr('font-size', '11px').text('Zero-shot');
+
+      legend.append('rect').attr('x', 0).attr('y', 22).attr('width', 15).attr('height', 15).attr('fill', colors.coral);
+      legend.append('text').attr('x', 20).attr('y', 34).attr('font-size', '11px').text('One-shot');
+
+      // Bars
+      const groups = svg.selectAll('.bar-group')
+        .data(data)
+        .join('g')
+        .attr('class', 'bar-group')
+        .attr('transform', d => `translate(${x0(d.model)}, 0)`);
+
+      // Zero-shot bars
+      groups.append('rect')
+        .attr('class', 'zero-bar')
+        .attr('x', x1('zero_shot'))
+        .attr('y', y(0))
+        .attr('width', x1.bandwidth())
+        .attr('height', 0)
+        .attr('fill', '#ccc');
+
+      // One-shot bars
+      groups.append('rect')
+        .attr('class', 'one-bar')
+        .attr('x', x1('one_shot'))
+        .attr('y', y(0))
+        .attr('width', x1.bandwidth())
+        .attr('height', 0)
+        .attr('fill', colors.coral);
+
+      // Delta annotations
+      const deltas = groups.append('text')
+        .attr('class', 'delta-label')
+        .attr('x', x1('one_shot') + x1.bandwidth() / 2)
+        .attr('y', y(0) - 5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '12px')
+        .attr('font-weight', 'bold')
+        .attr('fill', colors.coral)
+        .attr('opacity', 0)
+        .text(d => d.one_shot > 0.05 ? `+${Math.round(d.one_shot * 100)}pp` : '');
+
+      function animateBars() {
+        // Reset
+        svg.selectAll('.zero-bar')
+          .attr('y', y(0))
+          .attr('height', 0);
+
+        svg.selectAll('.one-bar')
+          .attr('y', y(0))
+          .attr('height', 0);
+
+        deltas.attr('opacity', 0);
+
+        // Animate zero-shot (stays at 0)
+        svg.selectAll('.zero-bar')
+          .data(data)
+          .transition()
+          .duration(500)
+          .attr('y', d => y(d.zero_shot))
+          .attr('height', d => y(0) - y(d.zero_shot));
+
+        // Animate one-shot
+        svg.selectAll('.one-bar')
+          .data(data)
+          .transition()
+          .delay(600)
+          .duration(800)
+          .attr('y', d => y(d.one_shot))
+          .attr('height', d => y(0) - y(d.one_shot));
+
+        // Show deltas
+        deltas
+          .transition()
+          .delay(1400)
+          .duration(300)
+          .attr('y', d => y(d.one_shot) - 8)
+          .attr('opacity', 1);
+      }
+
+      // Intersection observer for scroll-triggered animation
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateBars();
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      observer.observe(container.node());
+
+      // Replay button
+      document.getElementById('animate-bars').addEventListener('click', animateBars);
+    }
+
+    // ============================================================
+    // VISUALIZATION 6: THE CAUSAL INTERVENTION
+    // ============================================================
+
+    function initInterventionVisualization() {
+      const container = d3.select('#intervention-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 300;
+      const margin = { top: 30, right: 30, bottom: 40, left: 60 };
+
+      const data = generateInterventionData();
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLog()
+        .domain([1, 10000])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, 0.6])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5, '~s'));
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(5));
+
+      const line = d3.line()
+        .x(d => x(d.n))
+        .y(d => y(d.edl_per_token))
+        .curve(d3.curveMonotoneX);
+
+      // Before line (teaching)
+      const beforePath = svg.append('path')
+        .datum(data.before)
+        .attr('fill', 'none')
+        .attr('stroke', colors.orange)
+        .attr('stroke-width', 2.5)
+        .attr('d', line);
+
+      // After line (elicitation)
+      const afterPath = svg.append('path')
+        .datum(data.after)
+        .attr('fill', 'none')
+        .attr('stroke', colors.blue)
+        .attr('stroke-width', 2.5)
+        .attr('opacity', 0)
+        .attr('d', line);
+
+      // Before points
+      const beforePoints = svg.selectAll('.before-point')
+        .data(data.before)
+        .join('circle')
+        .attr('class', 'before-point')
+        .attr('cx', d => x(d.n))
+        .attr('cy', d => y(d.edl_per_token))
+        .attr('r', 5)
+        .attr('fill', colors.orange);
+
+      // After points
+      const afterPoints = svg.selectAll('.after-point')
+        .data(data.after)
+        .join('circle')
+        .attr('class', 'after-point')
+        .attr('cx', d => x(d.n))
+        .attr('cy', d => y(d.edl_per_token))
+        .attr('r', 5)
+        .attr('fill', colors.blue)
+        .attr('opacity', 0);
+
+      // Labels
+      const beforeLabel = svg.append('text')
+        .attr('x', x(100))
+        .attr('y', y(data.before[4].edl_per_token) - 10)
+        .attr('font-size', '12px')
+        .attr('fill', colors.orange)
+        .text('Before: Teaching');
+
+      const afterLabel = svg.append('text')
+        .attr('x', x(100))
+        .attr('y', y(data.after[4].edl_per_token) + 20)
+        .attr('font-size', '12px')
+        .attr('fill', colors.blue)
+        .attr('opacity', 0)
+        .text('After: Elicitation');
+
+      // Threshold indicators
+      const beforeThreshold = svg.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', width - margin.right)
+        .attr('y1', y(0.4))
+        .attr('y2', y(0.4))
+        .attr('stroke', colors.orange)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '5,5')
+        .attr('opacity', 0.5);
+
+      const afterThreshold = svg.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', width - margin.right)
+        .attr('y1', y(0.1))
+        .attr('y2', y(0.1))
+        .attr('stroke', colors.blue)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '5,5')
+        .attr('opacity', 0);
+
+      // Interpolation function
+      function interpolateData(t) {
+        return data.before.map((b, i) => ({
+          n: b.n,
+          edl_per_token: b.edl_per_token * (1 - t) + data.after[i].edl_per_token * t
+        }));
+      }
+
+      // Slider control
+      const slider = document.getElementById('intervention-slider');
+      const stateLabel = document.getElementById('intervention-state');
+
+      slider.addEventListener('input', (e) => {
+        const t = e.target.value / 100;
+
+        // Interpolate curve
+        const interpolated = interpolateData(t);
+
+        // Update paths
+        beforePath.attr('opacity', 1 - t);
+        afterPath.attr('opacity', t);
+
+        // Update points
+        beforePoints
+          .data(interpolated)
+          .attr('cy', d => y(d.edl_per_token))
+          .attr('fill', d3.interpolateRgb(colors.orange, colors.blue)(t));
+
+        afterPoints.attr('opacity', t);
+
+        // Update labels
+        beforeLabel.attr('opacity', 1 - t);
+        afterLabel.attr('opacity', t);
+
+        // Update thresholds
+        beforeThreshold.attr('opacity', 0.5 * (1 - t));
+        afterThreshold.attr('opacity', 0.5 * t);
+
+        // Update state text
+        if (t < 0.5) {
+          stateLabel.textContent = 'Before: Teaching signature';
+          stateLabel.style.color = colors.orange;
+        } else {
+          stateLabel.textContent = 'After: Elicitation signature';
+          stateLabel.style.color = colors.blue;
+        }
+      });
+    }
+
+    // ============================================================
+    // VISUALIZATION 7: THE CAPACITY CLIFF
+    // ============================================================
+
+    function initCapacityVisualization() {
+      const container = d3.select('#capacity-chart');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 350;
+      const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+
+      let data = generateCapacityData();
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLog()
+        .domain([0.0001, 10])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, 1.05])
+        .range([height - margin.bottom, margin.top]);
+
+      const rankColor = d3.scaleOrdinal()
+        .domain([4, 16, 64, 256])
+        .range(['#4A90D9', '#50C878', '#E8A838', '#D97757']);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(5, '.0e'))
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', 40)
+        .attr('fill', 'currentColor')
+        .text('EDL / trainable parameters (bits/param)');
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).tickFormat(d3.format('.0%')))
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -45)
+        .attr('fill', 'currentColor')
+        .text('Capacity');
+
+      // Threshold lines
+      svg.append('line')
+        .attr('class', 'threshold elicit-threshold')
+        .attr('x1', x(0.05))
+        .attr('x2', x(0.05))
+        .attr('y1', margin.top)
+        .attr('y2', height - margin.bottom)
+        .attr('stroke', colors.blue)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+
+      svg.append('text')
+        .attr('x', x(0.05) + 5)
+        .attr('y', margin.top + 15)
+        .attr('font-size', '11px')
+        .attr('fill', colors.blue)
+        .text('Elicitation threshold (~0.05)');
+
+      svg.append('line')
+        .attr('class', 'threshold teach-threshold')
+        .attr('x1', x(1))
+        .attr('x2', x(1))
+        .attr('y1', margin.top)
+        .attr('y2', height - margin.bottom)
+        .attr('stroke', colors.orange)
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5');
+
+      svg.append('text')
+        .attr('x', x(1) + 5)
+        .attr('y', margin.top + 30)
+        .attr('font-size', '11px')
+        .attr('fill', colors.orange)
+        .text('Teaching threshold (~1)');
+
+      // Points
+      const points = svg.selectAll('.cap-point')
+        .data(data)
+        .join('circle')
+        .attr('class', 'cap-point')
+        .attr('cx', d => x(d.edl_per_param))
+        .attr('cy', d => y(d.capacity))
+        .attr('r', 6)
+        .attr('fill', d => rankColor(d.rank))
+        .attr('opacity', 0.7)
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1)
+        .on('mouseover', (event, d) => {
+          showTooltip(event,
+            `EDL/P: ${d.edl_per_param.toFixed(4)}<br>` +
+            `Capacity: ${(d.capacity * 100).toFixed(1)}%<br>` +
+            `Rank: ${d.rank}<br>` +
+            `Regime: ${d.regime}`
+          );
+        })
+        .on('mouseout', hideTooltip);
+
+      // Legend
+      const legend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right - 80}, ${height - margin.bottom - 100})`);
+
+      [4, 16, 64, 256].forEach((rank, i) => {
+        legend.append('circle')
+          .attr('cx', 0)
+          .attr('cy', i * 20)
+          .attr('r', 5)
+          .attr('fill', rankColor(rank));
+        legend.append('text')
+          .attr('x', 10)
+          .attr('y', i * 20 + 4)
+          .attr('font-size', '11px')
+          .text(`Rank ${rank}`);
+      });
+
+      // Filters
+      let showElicit = true;
+      let showTeach = true;
+      let rankFilter = 'all';
+
+      function updatePoints() {
+        points
+          .attr('opacity', d => {
+            const regimeMatch = (d.regime === 'elicitation' && showElicit) ||
+                               (d.regime === 'teaching' && showTeach);
+            const rankMatch = rankFilter === 'all' || d.rank === parseInt(rankFilter);
+            return regimeMatch && rankMatch ? 0.7 : 0.05;
+          });
+      }
+
+      document.getElementById('cap-elicit').addEventListener('click', function() {
+        showElicit = !showElicit;
+        this.classList.toggle('active', showElicit);
+        updatePoints();
+      });
+
+      document.getElementById('cap-teach').addEventListener('click', function() {
+        showTeach = !showTeach;
+        this.classList.toggle('active', showTeach);
+        updatePoints();
+      });
+
+      document.getElementById('rank-filter').addEventListener('change', function() {
+        rankFilter = this.value;
+        updatePoints();
+      });
+    }
+
+    // ============================================================
+    // VISUALIZATION 8: ADAPTER SIZE CALCULATOR
+    // ============================================================
+
+    function initCalculator() {
+      const container = d3.select('#calc-viz');
+      const width = container.node().getBoundingClientRect().width;
+      const height = 150;
+      const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+
+      const svg = container.append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+
+      const x = d3.scaleLog()
+        .domain([0.001, 10])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain([0, 1])
+        .range([height - margin.bottom, margin.top]);
+
+      // Axes
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(4, '.0e'));
+
+      svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format('.0%')));
+
+      // Capacity curve
+      const curveData = [];
+      for (let i = -3; i <= 1; i += 0.1) {
+        const edlP = Math.pow(10, i);
+        const threshold = 0.05;
+        const capacity = edlP < threshold ? 0.95 : Math.max(0.1, 0.95 - (edlP - threshold) * 3);
+        curveData.push({ edlP, capacity });
+      }
+
+      const line = d3.line()
+        .x(d => x(d.edlP))
+        .y(d => y(d.capacity))
+        .curve(d3.curveMonotoneX);
+
+      svg.append('path')
+        .datum(curveData)
+        .attr('fill', 'none')
+        .attr('stroke', colors.coral)
+        .attr('stroke-width', 2)
+        .attr('d', line);
+
+      // "You are here" marker
+      const marker = svg.append('g')
+        .attr('class', 'marker');
+
+      marker.append('circle')
+        .attr('r', 8)
+        .attr('fill', colors.darkBlue);
+
+      marker.append('text')
+        .attr('y', -15)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '10px')
+        .attr('fill', colors.darkBlue)
+        .text('You are here');
+
+      function updateCalculator() {
+        const edl = parseFloat(document.getElementById('calc-edl').value) || 10000;
+        const modelSelect = document.getElementById('calc-model');
+        let modelParams;
+
+        if (modelSelect.value === 'custom') {
+          modelParams = parseFloat(document.getElementById('calc-custom-params').value) || 8e9;
+          document.getElementById('custom-params-group').style.display = 'block';
+        } else {
+          modelParams = parseFloat(modelSelect.value);
+          document.getElementById('custom-params-group').style.display = 'none';
+        }
+
+        const regime = document.getElementById('calc-regime').value;
+        const targetCap = parseFloat(document.getElementById('calc-target').value);
+
+        document.getElementById('target-cap-display').textContent = targetCap.toFixed(2);
+
+        // Determine threshold based on regime
+        let threshold;
+        if (regime === 'elicitation') {
+          threshold = 0.05;
+        } else if (regime === 'teaching') {
+          threshold = 1.0;
+        } else {
+          // Auto-detect: use elicitation if EDL is small relative to model
+          threshold = edl / modelParams < 0.1 ? 0.05 : 1.0;
+        }
+
+        // Calculate required parameters
+        const requiredParams = edl / (threshold * targetCap);
+
+        // Estimate LoRA rank (assuming roughly 2 * hidden_dim * rank * num_layers trainable params)
+        // For 8B model: hidden_dim ~4096, num_layers ~32, so params ≈ rank * 524288
+        const paramsPerRank = modelParams / 30000; // rough estimate
+        let rank = Math.ceil(requiredParams / paramsPerRank);
+        rank = Math.max(1, Math.min(1024, Math.pow(2, Math.ceil(Math.log2(rank)))));
+
+        const actualParams = rank * paramsPerRank;
+        const actualEdlP = edl / actualParams;
+
+        // Update display
+        document.getElementById('calc-rank').textContent = rank;
+        document.getElementById('calc-params').textContent =
+          actualParams >= 1e9 ? `~${(actualParams / 1e9).toFixed(1)}B` :
+          actualParams >= 1e6 ? `~${(actualParams / 1e6).toFixed(1)}M` :
+          `~${(actualParams / 1e3).toFixed(1)}K`;
+
+        // Warning
+        const warning = document.getElementById('calc-warning');
+        if (requiredParams > modelParams * 0.1) {
+          warning.style.display = 'block';
+          warning.textContent = 'Warning: Required capacity exceeds typical LoRA limits. Consider full fine-tuning or a larger model.';
+        } else if (rank > 256) {
+          warning.style.display = 'block';
+          warning.textContent = 'Note: High rank recommended. This approaches full fine-tuning efficiency.';
+        } else {
+          warning.style.display = 'none';
+        }
+
+        // Update marker
+        const clampedEdlP = Math.max(0.001, Math.min(10, actualEdlP));
+        const capacity = clampedEdlP < threshold ? 0.95 : Math.max(0.1, 0.95 - (clampedEdlP - threshold) * 3);
+
+        marker
+          .attr('transform', `translate(${x(clampedEdlP)}, ${y(Math.min(1, capacity))})`);
+      }
+
+      // Event listeners
+      ['calc-edl', 'calc-model', 'calc-custom-params', 'calc-regime', 'calc-target'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCalculator);
+        document.getElementById(id).addEventListener('change', updateCalculator);
+      });
+
+      updateCalculator();
+    }
+
+    // ============================================================
+    // INITIALIZE ALL VISUALIZATIONS
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initMDLVisualization();
+      initEDLDecomposition();
+      initSignaturesVisualization();
+      initCrossoverVisualization();
+      initOneExampleVisualization();
+      initInterventionVisualization();
+      initCapacityVisualization();
+      initCalculator();
+    });
+  </script>
+</body>
+</html>
