@@ -374,7 +374,8 @@
   <article>
     <header>
       <h1>Bits That Count: Quantifying and Predicting Emergent Capabilities in Language Models</h1>
-      <p class="authors">Elizabeth Donoway, Hailey Joren, Ethan Perez, John Schulman, Fabien Roger, Jan Leike</p>
+      <h2><em>When more is different, sometimes less is all you need.</em></h2>
+      <p class="authors">Elizabeth Donoway, Hailey Joren, Michael R. DeWeese, Ethan Perez, John Schulman, Fabien Roger, Jan Leike</p>
       <p class="summary">Quantifying and predicting what language models know, how much they (can) learn, and how they learn it.</p>
     </header>
 
@@ -387,7 +388,7 @@
 
       <p>This uncertainty has practical consequences.</p>
 
-      <p><strong>For safety:</strong> If a dangerous capability is latent, it can be surfaced with minimal intervention—a few examples, a clever prompt, an unexpected deployment context. If the capability must be taught from scratch, the information barrier is higher and more predictable. Knowing which regime we're in changes how we assess risk.</p>
+      <p><strong>For safety:</strong> If a dangerous capability is latent, it can sometimes be surfaced with minimal intervention—a few examples, a clever prompt, an unexpected deployment context. If the capability must be taught from scratch, the information barrier is higher and more predictable. Knowing which regime we're in changes how we assess risk.</p>
 
       <p><strong>For evaluation:</strong> When we fine-tune models to assess their capabilities, are we measuring what they already know, or inadvertently teaching them something new? If our elicitation procedure crosses into teaching, we're no longer evaluating the model that will be deployed—we're evaluating a different model, one that learned during the evaluation itself.</p>
 
@@ -403,7 +404,7 @@
     <h2>Learning as Compression</h2>
 
     <section id="alice-bob">
-      <h3>Alice and Bob Learn How to Communicate Better</h3>
+      <h3>Alice and Bob Learn to Communicate</h3>
 
       <p>Imagine Alice has fine-tuned a language model and wants to share it with Bob. Bob already has the same base model and the same training inputs, but not the labels. Instead of sending gigabytes of weight differences, Alice could just send the labels along with instructions describing exactly how to replicate her training procedure.<sup>[1]</sup> She can even use the base model itself to communicate the labels to Bob. Bob trains his copy on them and reconstructs her model exactly.<sup>[2]</sup></p>
 
@@ -513,9 +514,9 @@
 
       <p>To minimize the description length—that is, the file size—Alice can compress the labels. But she and Bob need to use the same compression algorithm so that Bob can decompress them. Here, the model itself becomes the compression algorithm. If the model already predicts a label well, Alice needs very few bits to communicate it. Saying "the answer is 68" to a model that already thinks "68" is likely requires almost no information. But if the model expects "14" when the answer is actually "68", Alice needs more bits to convey the surprise. Better predictions mean shorter messages.</p>
 
-      <p>If Alice sends labels sequentially, she and Bob can use an optimizer—say, SGD—to iteratively improve (train) their shared model as it compresses. They each update their copy after each batch Bob receives, using only the labels Bob has received so far. This keeps the compression algorithm identical on both ends, so Bob can always decompress.</p>
+      <p>If Alice sends labels sequentially, she and Bob can use an optimizer—say, SGD—to iteratively improve (train) their shared model as it compresses. They each update<sup>[3]</sup> their copy after each batch Bob receives, using only the labels Bob has received so far. This keeps the compression algorithm identical on both ends, so Bob can always decompress.</p>
 
-      <p>Over time, the model's predictions improve, so Alice can send each new batch of labels using progressively smaller files. Once every label in the dataset has been received by Bob, he has all the information necessary to recreate Alice's fine-tuned model.</p>
+      <p>Over time, the model's predictions improve, so Alice can send each new batch of labels using progressively smaller files. Once every label in the dataset has been received by Bob, he has all the information necessary to recreate Alice's fine-tuned model.<sup>[4]</sup></p>
     </section>
 
     <section id="computing-mdl">
@@ -542,7 +543,7 @@
 
       <p>MDL tells us how much information the model received. But how much did it actually <em>learn</em>? How much structure did it extract about patterns that generalize to new data?</p>
 
-      <p>After training (potentially for multiple epochs), evaluate the model on held-out test data. The test loss represents the model's remaining uncertainty—the information it <em>couldn't</em> compress into its parameters.</p>
+      <p>After training (potentially for multiple epochs), we evaluate the model on held-out test data. The test loss represents the model's remaining uncertainty—the information it <em>couldn't</em> compress into its parameters.</p>
 
       <p>If the model learned nothing generalizable, its test loss would be as high as its initial training loss. MDL would equal n × L<sub>test</sub>, and there would be no "excess."</p>
 
@@ -738,7 +739,9 @@
 
       <h3>Emergence in Language Models</h3>
 
-      <p>Consider what happens during pretraining. A model processes billions of tokens, each one a local observation: a word following other words. No single token teaches the model arithmetic. No single paragraph teaches it to reason about code, or to translate between languages, or to write poetry. But collectively, at scale, these local patterns give rise to capabilities that are qualitatively different from anything present in any individual training example. The model develops internal representations that capture abstract structure: algorithms, conceptual relationships, reasoning strategies. These are emergent properties of the training process—they arise from the collective interaction of vast amounts of data with the model's parameters, and they cannot be understood by examining any single component in isolation.</p>
+      <p>Emergence is the process by which scale produces complexity. As a model processes more data, it can develop more complex internal representations. These representations can capture abstract patterns and algorithms that are not present in any single training example but emerge from the collective experience of processing many examples.</p>
+
+      <p>Consider what happens during pretraining. A model processes billions of tokens, each one a local observation: a word following other words. No single token teaches the model arithmetic. No single paragraph teaches it to reason about code, or to translate between languages, or to write poetry. But collectively, at scale, these local patterns give rise to capabilities that are qualitatively different from anything present in any individual training example. The model develops internal representations that capture abstract structure: algorithms, conceptual relationships, reasoning strategies. These are emergent phenomena of the training process—they arise from the collective interaction of vast amounts of data with the model's parameters, and they cannot be understood by examining any single component in isolation.</p>
 
       <p>This is Anderson's principle, instantiated in a neural network. <em>More is different</em>: more data, more parameters, more computation produce capabilities that are not simply "more of the same" but something qualitatively new.</p>
 
@@ -746,13 +749,13 @@
 
       <p>In algorithmic information theory, the <em>complexity</em> of a system is the length of its shortest description. More complex systems require longer descriptions—more bits to specify.</p>
 
-      <p>We can evaluate any system in terms of its complexity, regardless of what that system is or how it manifests. Functions, computer programs, humans, rocks, the universe, and—most relevant for our experiments here—models and capabilities all have their own respective complexities, determined by what components they're composed of and how those components interact.</p>
+      <p>We can evaluate any system in terms of its complexity, regardless of what that system is or how it manifests. Functions, computer programs, humans, rocks, the universe, and—most relevant for our experiments here—models and capabilities all<sup>[5]</sup> have their own respective complexities, determined by what components they're composed of and how those components interact.<sup>[6]</sup></p>
 
       <p>As a visual example, consider the complexities of systems with two degrees of freedom, shape and color:</p>
 
       <!-- Complexity comparison diagram -->
       <div class="illustration">
-        <svg viewBox="0 0 800 220" style="max-width: 800px; width: 100%; height: auto;">
+        <svg viewBox="0 0 800 220" style="max-width: 900px; width: 100%; height: auto;">
           <!-- System A: 25 blue circles -->
           <g transform="translate(20, 10)">
             <rect x="0" y="0" width="350" height="200" rx="8" fill="#f6f9fe" stroke="#4A90D9" stroke-width="1" stroke-dasharray="4,2"/>
@@ -838,23 +841,35 @@
         <p class="illustration-caption">System A contains more objects but has a shorter description—it is less complex. System B requires specifying each shape and color individually.</p>
       </div>
 
-      <p>The same principle applies to capabilities. A model that has learned the algorithm for addition has a compact representation that covers infinitely many arithmetic facts. A model that memorizes individual facts needs a separate entry for each one—incompressible, high complexity.</p>
+      <p>System A contains more objects but is less complex.<sup>[7]</sup> We can say "25 blue circles" instead of describing each one—we can compress it so that its description is shorter. System B contains fewer objects, but we have to specify each shape and color individually—we can't compress it further. It's more complex.</p>
+      
+      <p>The complexity of a system is not just about how many components it has, but how those components are structured and how much information is needed to describe them.</p>
+
+      <p>The same principle applies to capabilities. A model that has learned the algorithm for addition has a compact representation that covers infinitely many arithmetic facts. A model that sees addition as individual facts to memorize needs a separate entry for each one—incompressible, high complexity.</p>
+
+      <p>When capabilities emerge during training, the associated complexity gets encoded in the model's parameters. There's a “no free lunch” principle at work: models cannot acquire capabilities without, at some point, paying the information cost to encode them.</p>
+
+      <p>This cost might be paid during pretraining, during fine-tuning or RLHF, or during in-context learning. But it must be paid somewhere.</p>
 
       <h3>Where Emergence Meets Elicitation</h3>
 
       <p>Here is where Anderson's principle connects to the central question of this work.</p>
 
-      <p>During pretraining, "more is different": scale produces emergent capabilities—complex internal representations that couldn't exist in a smaller model or with less data. These emergent capabilities have a measurable <em>complexity</em>, an information cost that was paid during pretraining.</p>
+      <p>During pretraining, "more is different": scale produces emergent capabilities—complex internal representations that couldn't exist in a smaller model, a simpler architecture, or with less data. These emergent capabilities have a measurable <em>complexity</em>, an information cost that was paid during pretraining.</p>
 
-      <p>The question we ask is: what happens when we fine-tune? Is the model surfacing complexity that already exists in its weights, or is it building new complexity from scratch?</p>
+      <p>The question we ask is: <em>what happens when we fine-tune?</em> Is the model surfacing complexity that already exists in its weights, or is it building new complexity from scratch?</p>
 
-      <p>When the relevant complexity is already present—when the emergent capability is latent—the model doesn't need to reconstruct it. It only needs a small signal that says, in effect, "use <em>this</em> capability for <em>this</em> task." This is <strong>elicitation</strong>: accessing emergent structure that already exists. The information cost is low, because the complexity was already paid for.</p>
+      <p>When the relevant complexity is already present—when the capability is emergent, if latent—the model doesn't need to reconstruct it. It only needs a small signal that says, in effect, "use <em>this</em> capability for <em>this</em> task." This is <em><strong>elicitation</strong></em>: adapting emergent structure that already exists. The information cost is low, because the complexity was already paid for.</p>
 
-      <p>When the relevant complexity is absent—when the capability never emerged during pretraining—the model must build it during fine-tuning. It must pay the full information cost of constructing new representations. This is <strong>teaching</strong>: creating complexity that doesn't yet exist. The information cost is high, because emergence hasn't happened yet.</p>
+      <p>When the relevant complexity is absent—when the capability never emerged during pretraining—the model must build it during fine-tuning. It must pay the full information cost of constructing new representations. This is <em><strong>teaching</strong></em>: creating complexity that doesn't yet exist. The information cost is high, because emergence hasn't happened yet.</p>
 
-      <p>Our section titles are a nod to the interplay between these ideas. Anderson's "more is different" describes how scale creates emergence. The scaling-era mantra emphasizes the power of more data and more compute. We find that both need qualification. When the emergent complexity already exists, <strong>"less is all you need"</strong>—remarkably little information suffices to surface it. When it doesn't, <strong>"more is necessary"</strong>—you can't shortcut the information cost of building complexity from scratch.</p>
+      <p>Our section titles are a nod to the interplay between these ideas. Anderson's "more is different" describes how scale creates emergence. The scaling-era mantra, "scale is all you need,"<sup>[*]</sup> emphasizes the power of more data, more parameters, and more compute. We find that both need qualification. When emergent complexity already exists, <strong>"less is all you need"</strong>—remarkably little information suffices to surface it. When it doesn't, <strong>"more is necessary"</strong>—you can't shortcut the information cost of building complexity from scratch.</p>
 
       <p>EDL measures this cost. And the scaling of EDL with data reveals which learning mechanism—elicitation or teaching—governs the dynamics we observe.</p>
+
+      <div class="scale-footnote">
+        <p><sup>[*]</sup> Originally "Attention Is All You Need," now a template applied to whatever the speaker believes is the key ingredient.</p>
+      </div>
     </section>
 
     <h2>Dynamical Signatures of Elicitation and Teaching</h2>
@@ -870,7 +885,7 @@
 
       <!-- Elicitation cartoon: uncertainty collapse with specific hypotheses -->
       <div class="illustration">
-        <svg viewBox="0 0 900 300" style="max-width: 900px; width: 100%; height: auto;">
+        <svg viewBox="0 0 920 300" style="max-width: 920px; width: 100%; height: auto;">
           <!-- Stage 1: Prompt with many possible responses -->
           <g transform="translate(15, 10)">
             <text x="105" y="12" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e">Prompt: "23 + 45 ="</text>
@@ -941,9 +956,9 @@
 
             <!-- Insight box -->
             <rect x="5" y="160" width="180" height="50" rx="6" fill="#D97757" fill-opacity="0.1" stroke="#D97757"/>
-            <text x="95" y="178" text-anchor="middle" font-size="9" fill="#1a1a2e" font-weight="600">"Oh! You want the numeric</text>
-            <text x="95" y="192" text-anchor="middle" font-size="9" fill="#1a1a2e" font-weight="600">answer, not a description."</text>
-            <text x="95" y="206" text-anchor="middle" font-size="8" fill="#666">Uncertainty collapsed</text>
+            <text x="95" y="176" text-anchor="middle" font-size="9" fill="#1a1a2e" font-weight="600">"Oh! You want the numeric</text>
+            <text x="95" y="189" text-anchor="middle" font-size="9" fill="#1a1a2e" font-weight="600">answer, not a description."</text>
+            <text x="95" y="202" text-anchor="middle" font-size="8" fill="#666">Uncertainty collapsed</text>
           </g>
 
           <!-- Arrow: next example -->
@@ -999,15 +1014,15 @@
 
             <!-- Diminishing returns box -->
             <rect x="5" y="160" width="180" height="50" rx="6" fill="#f0f0f0" stroke="#ccc"/>
-            <text x="95" y="180" text-anchor="middle" font-size="9" fill="#666">Already at 98% → 99%</text>
-            <text x="95" y="195" text-anchor="middle" font-size="9" fill="#666" font-weight="600">Diminishing returns!</text>
-            <text x="95" y="210" text-anchor="middle" font-size="8" fill="#999">EDL/token decreases</text>
+            <text x="95" y="175" text-anchor="middle" font-size="9" fill="#666">Already at 98% → 99%</text>
+            <text x="95" y="189" text-anchor="middle" font-size="9" fill="#666" font-weight="600">Diminishing returns!</text>
+            <text x="95" y="202" text-anchor="middle" font-size="8" fill="#999">EDL/token decreases</text>
           </g>
         </svg>
         <p class="illustration-caption">Elicitation: The model knows many things about "23+45." The first example collapses uncertainty about which capability to use. Additional examples provide diminishing information because the distribution is already near the target.</p>
       </div>
 
-      <p>This is the signature of elicitation: <em>diminishing returns to data</em>. Each example provides less marginal information than the previous one.</p>
+      <p>This is the EDL signature of elicitation: <em>diminishing returns to data</em>. Each example provides less marginal information than the previous one.</p>
 
       <h3>Teaching: Monotonically Increasing</h3>
 
@@ -1019,7 +1034,7 @@
 
       <!-- Teaching cartoon: shapes and colors pattern learning with backfilling -->
       <div class="illustration">
-        <svg viewBox="0 0 900 520" style="max-width: 900px; width: 100%; height: auto;">
+        <svg viewBox="0 0 900 540" style="max-width: 900px; width: 100%; height: auto;">
           <!-- Task description -->
           <g transform="translate(450, 10)">
             <text x="0" y="0" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e">Task: Learn to predict colors from shapes</text>
@@ -1027,11 +1042,11 @@
           </g>
 
           <!-- Stage 1: One example -->
-          <g transform="translate(15, 35)">
+          <g transform="translate(15, 40)">
             <text x="80" y="0" text-anchor="middle" font-size="10" font-weight="600" fill="#1a1a2e">Example 1</text>
             <rect x="10" y="10" width="140" height="55" rx="5" fill="#F0EDE8" stroke="#E0DCD5"/>
-            <rect x="55" y="22" width="20" height="20" fill="#4A90D9" stroke="#2E6BA6"/>
-            <text x="85" y="36" font-size="9" fill="#1a1a2e">→ blue</text>
+            <rect x="55" y="28" width="20" height="20" fill="#4A90D9" stroke="#2E6BA6"/>
+            <text x="85" y="42" font-size="9" fill="#1a1a2e">→ blue</text>
 
             <rect x="10" y="72" width="140" height="40" rx="5" fill="#fff" stroke="#ccc"/>
             <text x="80" y="88" text-anchor="middle" font-size="8" fill="#666">Hypothesis:</text>
@@ -1040,18 +1055,18 @@
           </g>
 
           <!-- Arrow 1 -->
-          <g transform="translate(165, 70)">
+          <g transform="translate(165, 75)">
             <path d="M 0 0 L 25 0" stroke="#666" stroke-width="1.5"/>
             <polygon points="28,0 22,-4 22,4" fill="#666"/>
           </g>
 
           <!-- Stage 2: Two examples -->
-          <g transform="translate(200, 35)">
+          <g transform="translate(200, 40)">
             <text x="80" y="0" text-anchor="middle" font-size="10" font-weight="600" fill="#1a1a2e">Example 2</text>
             <rect x="10" y="10" width="140" height="55" rx="5" fill="#F0EDE8" stroke="#E0DCD5"/>
-            <rect x="30" y="25" width="16" height="16" fill="#4A90D9" stroke="#2E6BA6" opacity="0.5"/>
-            <circle cx="100" cy="33" r="11" fill="#D97757" stroke="#B85A3C"/>
-            <text x="120" y="37" font-size="9" fill="#1a1a2e">→ red</text>
+            <rect x="30" y="30" width="16" height="16" fill="#4A90D9" stroke="#2E6BA6" opacity="0.5"/>
+            <circle cx="100" cy="38" r="10" fill="#D97757" stroke="#B85A3C"/>
+            <text x="120" y="42" font-size="9" fill="#1a1a2e">→ red</text>
 
             <rect x="10" y="72" width="140" height="40" rx="5" fill="#fff" stroke="#E8A838"/>
             <text x="80" y="88" text-anchor="middle" font-size="8" fill="#666">Hypothesis:</text>
@@ -1060,19 +1075,19 @@
           </g>
 
           <!-- Arrow 2 -->
-          <g transform="translate(350, 70)">
+          <g transform="translate(350, 75)">
             <path d="M 0 0 L 25 0" stroke="#666" stroke-width="1.5"/>
             <polygon points="28,0 22,-4 22,4" fill="#666"/>
           </g>
 
           <!-- Stage 3: Three examples with AHA moment -->
-          <g transform="translate(385, 35)">
+          <g transform="translate(385, 40)">
             <text x="80" y="0" text-anchor="middle" font-size="10" font-weight="600" fill="#50C878">Example 3 - Aha!</text>
             <rect x="10" y="10" width="140" height="55" rx="5" fill="#F0EDE8" stroke="#50C878" stroke-width="2"/>
             <rect x="22" y="27" width="14" height="14" fill="#4A90D9" stroke="#2E6BA6" opacity="0.5"/>
             <circle cx="60" cy="34" r="9" fill="#D97757" stroke="#B85A3C" opacity="0.5"/>
-            <ellipse cx="108" cy="34" rx="14" ry="9" fill="#D97757" stroke="#B85A3C"/>
-            <text x="130" y="38" font-size="9" fill="#1a1a2e">→ red!</text>
+            <ellipse cx="95" cy="34" rx="14" ry="9" fill="#D97757" stroke="#B85A3C"/>
+            <text x="116" y="38" font-size="9" fill="#1a1a2e">→ red!</text>
 
             <rect x="10" y="72" width="140" height="40" rx="5" fill="#50C878" fill-opacity="0.1" stroke="#50C878" stroke-width="2"/>
             <text x="80" y="88" text-anchor="middle" font-size="8" fill="#1a1a2e" font-weight="600">Pattern found:</text>
@@ -1081,13 +1096,13 @@
           </g>
 
           <!-- Arrow 3 -->
-          <g transform="translate(535, 70)">
+          <g transform="translate(535, 75)">
             <path d="M 0 0 L 25 0" stroke="#666" stroke-width="1.5"/>
             <polygon points="28,0 22,-4 22,4" fill="#666"/>
           </g>
 
           <!-- Stage 4: Pattern complete -->
-          <g transform="translate(570, 35)">
+          <g transform="translate(570, 40)">
             <text x="80" y="0" text-anchor="middle" font-size="10" font-weight="600" fill="#1a1a2e">Generalized</text>
             <rect x="10" y="10" width="140" height="100" rx="5" fill="#50C878" fill-opacity="0.1" stroke="#50C878"/>
             <text x="80" y="30" text-anchor="middle" font-size="9" fill="#1a1a2e" font-weight="600">Learned rule:</text>
@@ -1100,7 +1115,7 @@
           </g>
 
           <!-- More examples (diminishing returns in teaching) -->
-          <g transform="translate(720, 35)">
+          <g transform="translate(720, 40)">
             <text x="80" y="0" text-anchor="middle" font-size="10" font-weight="600" fill="#999">Example 4+</text>
             <rect x="10" y="10" width="160" height="100" rx="5" fill="#f5f5f5" stroke="#ccc"/>
             <text x="90" y="40" text-anchor="middle" font-size="9" fill="#666">Pattern already learned</text>
@@ -1111,7 +1126,7 @@
 
           <!-- BACKFILLING VISUALIZATION -->
           <!-- Examples above are at: Ex1@80, Ex2@265, Ex3@450 (relative to this g which is at x=15) -->
-          <g transform="translate(15, 155)">
+          <g transform="translate(15, 175)">
             <rect x="0" y="0" width="870" height="150" rx="8" fill="#fff8f5" stroke="#D97757" stroke-width="1"/>
             <text x="435" y="18" text-anchor="middle" font-size="11" font-weight="600" fill="#D97757">The "Backfilling" Effect: New patterns unlock information in past data</text>
 
@@ -1157,12 +1172,12 @@
               <text x="500" y="75" font-size="7" fill="#50C878" font-weight="600">peak!</text>
             </g>
 
-            <text x="435" y="138" text-anchor="middle" font-size="9" fill="#1a1a2e" font-style="italic">Example 3 didn't just add its own information—it made examples 1 and 2 understandable!</text>
+            <text x="435" y="142" text-anchor="middle" font-size="9" fill="#1a1a2e" font-style="italic">Example 3 didn't just add its own information—it made examples 1 and 2 understandable!</text>
           </g>
 
           <!-- EDL SLOPE COMPARISON -->
-          <g transform="translate(15, 315)">
-            <rect x="0" y="0" width="870" height="195" rx="8" fill="#f8f6f3" stroke="#E0DCD5"/>
+          <g transform="translate(15, 335)">
+            <rect x="0" y="0" width="870" height="200" rx="8" fill="#f8f6f3" stroke="#E0DCD5"/>
             <text x="435" y="20" text-anchor="middle" font-size="11" font-weight="600" fill="#1a1a2e">EDL/token vs. Data: Teaching vs. Elicitation Signatures</text>
 
             <!-- Teaching curve (left) -->
@@ -1180,11 +1195,11 @@
 
               <!-- Slope indicator -->
               <path d="M 80 90 L 140 60" stroke="#E8A838" stroke-width="1" stroke-dasharray="3,2"/>
-              <text x="115" y="68" font-size="8" fill="#E8A838" font-weight="600">slope > 0</text>
+              <text x="90" y="60" font-size="8" fill="#E8A838" font-weight="600">slope > 0</text>
 
               <!-- Annotations -->
-              <circle cx="50" cy="98" r="3" fill="#E8A838"/>
-              <text x="50" y="115" text-anchor="middle" font-size="7" fill="#666">low info</text>
+              <circle cx="50" cy="97" r="3" fill="#E8A838"/>
+              <text x="50" y="90" text-anchor="middle" font-size="7" fill="#E8A838">low info</text>
               <circle cx="200" cy="45" r="3" fill="#50C878"/>
               <text x="200" y="38" text-anchor="middle" font-size="7" fill="#50C878">pattern found!</text>
             </g>
@@ -1213,13 +1228,13 @@
               <text x="250" y="115" text-anchor="middle" font-size="7" fill="#666">diminishing</text>
             </g>
 
-            <text x="435" y="180" text-anchor="middle" font-size="9" fill="#1a1a2e" font-style="italic">Teaching: each example makes past data more informative. Elicitation: each example is less novel than the last.</text>
+            <text x="435" y="190" text-anchor="middle" font-size="9" fill="#1a1a2e" font-style="italic">Teaching: each example makes past data more informative. Elicitation: each example is less novel than the last.</text>
           </g>
         </svg>
         <p class="illustration-caption">Teaching builds new representations. The key insight: Example 3 doesn't just add information—it retroactively makes Examples 1 and 2 understandable. This "backfilling" is why EDL per label token increases during teaching.</p>
       </div>
 
-      <p>This is the signature of teaching: <em>increasing returns to data</em>. Each example enables extraction of more information from all previous examples.</p>
+      <p>This is the EDL signature of teaching: <em>increasing returns to data</em>. Each example enables extraction of more information from all previous examples.</p>
 
       <!-- Visualization 3: The Two Signatures -->
       <div class="visualization" id="viz-signatures">
@@ -1243,6 +1258,12 @@
 
       <p>What's happening at the peak? The model has learned enough, given the data and expressive capacity of its parameters, that additional new examples are now primarily redundant rather than informative. Teaching has transitioned to elicitation.</p>
 
+      <p>The model isn't necessarily achieving maximum possible performance in absolute terms. It might plateau at 80% accuracy on a task where full fine-tuning reaches 95%. But it has reached its own capability ceiling given its architecture, pretraining, and the patterns available in this data.</p>
+
+      <p>This is why we distinguish <em>learning mechanisms</em> (what governs the dynamics at each point in training, revealed by the derivative of EDL per token) from <em>learning regimes</em> (the overall character of learning on a task, determined by the dominant mechanism).</p>
+
+      <p>A model that starts in the elicitation regime may never need teaching if the full capability was latent from the start. A model that shows teaching signatures must build new capability, but eventually crosses over to elicitation once that capability exists. And a model that initially shows elicitation signatures may later cross into the teaching regime if it learns structure beyond what was captured in its pretrained weights.</p>
+
       <!-- Visualization 4: The Crossover -->
       <div class="visualization" id="viz-crossover">
         <div class="viz-title">The Crossover</div>
@@ -1256,7 +1277,7 @@
 
       <h3>Learning Is Relative</h3>
 
-      <p>If we had access to Llama's full pretraining trajectory, we'd presumably see teaching signatures early on—as the model first learns arithmetic—followed by elicitation signatures as arithmetic becomes latent.</p>
+      <p>If we had access to Llama's full pretraining trajectory, we'd presumably see teaching signatures early on—as the model first learns arithmetic—followed by elicitation signatures as arithmetic becomes sufficiently represented.</p>
 
       <p>The checkpoint we start fine-tuning from is somewhat arbitrary. There's nothing privileged about "after pretraining" versus "after 50% of pretraining" versus "after fine-tuning on task A but before task B."</p>
 
@@ -1267,7 +1288,7 @@
       <p>The signatures track the dynamics of learning without requiring any information about the training history.</p>
     </section>
 
-    <h2>Less Is All You Need (...Sometimes)</h2>
+    <h2>Less Is All You Need (...<em>Sometimes</em>)</h2>
 
     <section id="less-is-more">
       <p>It is an empirical fact in machine learning that more is better. But when is less <em>enough</em>?</p>
@@ -1284,9 +1305,9 @@
 
       <p>The answer "68" comes from a space of roughly 100 possibilities (for two-digit addition). That's about 7 bits of information: log<sub>2</sub>(100) ≈ 6.6.</p>
 
-      <p><strong>Seven bits (less than a single byte!) unlocks 96% accuracy</strong> on thousands of unseen problems.</p>
+      <p><strong>Seven bits (less than a single byte!) unlocks 96% accuracy</strong><sup>[8]</sup> on thousands of unseen problems.</p>
 
-      <p>This is only possible if the model already knows arithmetic. The complexity needed to represent the addition algorithm is significantly larger than the information this single example can contain. The example isn't teaching addition—it's pointing to addition capability that already exists. It's saying: "When given questions in <em>this</em> format, use your arithmetic knowledge to respond in <em>that</em> format."</p>
+      <p>This is only possible if the model already knows arithmetic. The complexity needed to represent the addition algorithm is significantly larger than the information this single example can contain. The example isn't teaching addition—it's pointing to addition capability that already exists. It's saying: "When given questions in <em>this</em> format, use your arithmetic knowledge and respond in <em>that</em> format."</p>
 
       <!-- Visualization 5: One Example Is All You Need -->
       <div class="visualization" id="viz-one-example">
@@ -1302,7 +1323,7 @@
 
       <p>Once a capability is elicited, additional examples have sharply diminishing returns.</p>
 
-      <p>Going from 0 to 1 example might give you +65 percentage points. Going from 1 to 10 examples might give you +5 more. Going from 10 to 100 might give you +3 more.</p>
+      <p>Going from 0 to 1 example might give you +67 percentage points. Going from 1 to 10 examples might give you +5 more. Going from 10 to 100 might give you +3 more.</p>
 
       <p>This matches the elicitation signature: EDL per token decreases because each additional example is more redundant than the last. The model already knows what you're asking for; showing it more examples of the same thing doesn't help much. The information gap between the base model and the fully elicited model is small. Most of that gap closes with the first few examples. What remains is refinement.</p>
 
@@ -1310,9 +1331,9 @@
 
       <p>We see the same pattern when constraining parameters instead of data.</p>
 
-      <p>Training just 10 <em>randomly selected</em> parameters on the full dataset—out of billions—recovers over 90% of full fine-tuning performance for Llama 3.1 8B on arithmetic.</p>
+      <p>Training just 10 <em>randomly selected</em> parameters on the full dataset—out of billions—recovers over 90% of full fine-tuning performance for Llama 3.1 8B on addition/subtraction arithmetic problems.</p>
 
-      <p>Ten parameters is roughly 160 bits of (uncompressed) storage at bfloat16 precision. But the model doesn't need to encode arithmetic in those 160 bits. It just needs to encode a small adjustment—a pointer to existing capability.</p>
+      <p>Ten parameters is roughly 160 bits<sup>[9]</sup> of uncompressed storage at bfloat16 precision<sup>[10]</sup>—and available storage is substantially lower. But the model doesn't need to encode arithmetic in those 160 bits. It just needs to encode a small adjustment—a pointer to existing capability.</p>
 
       <p>For TinyStories-1B? Ten parameters does nothing. The information required to encode arithmetic far exceeds what ten parameters can store, because the emergent capability doesn't exist in this model's weights. There's nothing to point to.</p>
 
@@ -1326,49 +1347,45 @@
 
       <h3>Reinforcement Learning Is Elicitation (Probably)</h3>
 
-      <p>When fine-tuned in the extreme low-information elicitation regime, base models often outperform the corresponding instruction-tuned variants—even when trained on a single randomly sampled example, or when training only 10 randomly selected LoRA parameters.</p>
+      <!-- <p>When trained with supervised fine-tuning (SFT) in the extreme low-information elicitation regime, base models often outperform their RLHF-instruction-tuned counterparts—even when trained on a single randomly sampled example, or when training only 10 randomly selected LoRA parameters.</p> -->
 
-      <p>This difference persists even after removing the confound of response format. When scoring correctness based on the model's final numerical answer (regardless of whether it follows task formatting instructions), the base model's accuracy remains higher than the instruction-tuned model's.</p>
+      <p>Our results may also shed light on a question that has attracted significant recent attention: what information does reinforcement learning (RL) contribute during post-training?</p>
+       <!-- Is it possible that compute-heavy RL approaches are primarily serving an elicitation role, rather than instilling new capabilities? -->
 
-      <p>Though the instruction-tuned models can output correctly-formatted responses zero-shot, their accuracies are often lower. This indicates that elicitation of the base model, in addition to aligning outputs to the task format (<em>format-specific</em> improvement), may also surface improved <em>capability-specific</em> performance. In other words, post-training and reinforcement learning from human feedback may, in some cases, have traded raw capability for instruction-following—and elicitation can recover it.</p>
+      <p>Across tasks where RL-based post-training is typically credited with improving model behavior—including format adherence, instruction following, and refusal—we find that fine-tuning base models with remarkably small SFT datasets (in some cases, a single example) or very few trainable parameters (~10–10,000) is sufficient to match or exceed the performance of the corresponding instruction-tuned models. By EDL, these interventions fall squarely in the elicitation regime: the information required to close the behavioral gap between the base model and its post-trained counterpart is negligible relative to the model's total parametric capacity.</p>
+
+      <!-- For tasks with unique and verifiable ground-truth solutions -->
+      <p>This difference persists even after removing the confound of response format. When scoring correctness based on the model's final answer (regardless of whether it follows task formatting instructions), the elicited base model's accuracy remains higher than the corresponding instruction-tuned model's. Though the instruction-tuned models can output correctly-formatted responses zero-shot, their accuracies are often lower. This suggests that elicitation of the base model, in addition to aligning outputs to the task format (<em>format-specific</em> improvement), may also surface improved <em>capability-specific</em> performance. In other words, post-training and reinforcement learning from human feedback (RLHF) may, in some cases, have traded raw capability for instruction-following—and elicitation can recover it.</p>
+
+      <p>This pattern extends to reasoning tasks. When we fine-tune base models on extended chain-of-thought traces, we again observe that very small amounts of supervised data suffice to elicit strong reasoning performance and significant accuracy improvements. This suggests that the capacity for step-by-step reasoning may already be substantially present in the pretrained model, with post-training serving primarily to surface and format it rather than to instill it.</p>
+
+      <p>These observations are consistent with a simple bandwidth argument: RL provides at most ~1 bit of information per episode (for binary rewards), which is significantly less than the per-token supervisory signal available in SFT. If SFT can reproduce RL's behavioral effects while operating well within the elicitation regime, it is difficult to see how RL, with its far more constrained information channel, could be doing anything beyond elicitation.</p>
+
+      <p>We emphasize that this is suggestive rather than conclusive. A rigorous information-theoretic treatment of RL post-training would require defining an analog of prequential MDL for the reinforcement learning setting—an open problem, since RL lacks the prediction-observation structure that gives MDL its coding-theoretic interpretation. We believe developing such a framework, and using it to formally characterize the information content of RL and reasoning-focused RL-based post-training, is a promising direction for future work.</p>
     </section>
 
-    <h2>More Is <del>Better</del> Necessary</h2>
+    <h2>More Is <del>Better</del> <em>Necessary</em></h2>
 
     <section id="teaching-requirements">
-      <p>When capabilities are absent, information requirements change dramatically.</p>
+      <p>When capabilities are absent—when the relevant complexity never emerged during pretraining—information requirements change dramatically.</p>
 
       <h3>Why Teaching Requires More</h3>
 
-      <p>TinyStories-1B must learn arithmetic from scratch. It has never seen numbers. It doesn't know what addition means. Every component of the capability must be constructed during fine-tuning.</p>
+      <p>Take TinyStories-1B, a Llama variant that was pretrained entirely on simple English short stories—it has no knowledge of the world beyond the kinds of bedtime tales read aloud to children no more than three or four years old. TinyStories-1B must learn arithmetic from scratch. It has never seen numbers. It doesn't know what addition means. Every component of the capability must be constructed during fine-tuning.</p>
 
-      <p>This requires substantially more information:</p>
+      <p>Think about what the model must encode: what numbers are (the digits 0–9 and their meanings), what addition means (the algorithm, or at least the input-output mapping), how to parse natural language arithmetic questions, and how to format numerical answers. Each of these is complex and requires information to specify. TinyStories-1B starts with none of it.</p>
 
-      <ul>
-        <li>Where Llama needs ~1 example to reach good performance, TinyStories needs ~10,000 to predict with nontrivial accuracy</li>
-        <li>Where Llama needs ~10 parameters to capture the task, TinyStories needs ~1M+ to substantially improve accuracy</li>
-      </ul>
+      <p>Where Llama needs ~1 example to reach good performance, TinyStories needs ~10,000 to predict with nonzero accuracy. Where Llama needs ~10 parameters to capture the task, TinyStories needs ~1M+ to substantially improve. The gap is orders of magnitude, and it reflects the difference between pointing to existing emergent structure and constructing that structure from scratch.</p>
 
-      <p>Think about what the model must encode:</p>
-
-      <ol>
-        <li>What numbers are (the digits 0–9 and their meanings)</li>
-        <li>What addition means (the algorithm, or at least the input-output mapping)</li>
-        <li>How to parse natural language arithmetic questions</li>
-        <li>How to format numerical answers</li>
-      </ol>
-
-      <p>Each of these is complex and requires information to specify. TinyStories-1B starts with none of this information.</p>
+      <p>With 10 examples, the model sees 10 isolated facts. It can't generalize because it doesn't have enough information to identify the pattern underlying those facts. With 1,000 examples, patterns are starting to form, but the model is still building—each example adds new information about the task structure. With 10,000, the model has seen enough to begin encoding the algorithm and can start to generalize with nontrivial accuracy. Above 100,000, additional examples start to become redundant, and we see the transition from teaching to elicitation—the capability now exists in the weights, and "more" has become "different."</p>
 
       <h3>Learning Capacity Limits for Teaching</h3>
 
-      <p>When teaching, models can absorb roughly <strong>1–2 bits of information per trainable parameter</strong> before hitting capacity limits.</p>
+      <p>When teaching, we find that models can absorb roughly 1–2 bits of information per trainable parameter before hitting capacity limits. This aligns with prior work on knowledge capacity scaling laws: Allen-Zhu & Li (2024)<sup>[11]</sup> found that language models can store approximately 2 bits per parameter of factual knowledge when trained on synthetic datasets with known information content.</p>
 
-      <p>Our teaching results match this bound: models in the teaching regime can compress up to ~1 bit/parameter into their adapters before performance degrades.</p>
+      <p>Our teaching results match this bound: models in the <strong>teaching regime</strong> can compress up to <strong>~1-2 bits/parameter</strong> into their adapters before performance degrades. But models in the <strong>elicitation regime</strong> saturate at a much lower threshold: <strong>~0.01–0.1 bits/parameter</strong>.</p>
 
-      <p>But models in the elicitation regime saturate at a much lower threshold: <strong>~0.01–0.1 bits/parameter</strong>.</p>
-
-      <p>Why the difference? Elicitation doesn't require encoding the capability itself—only a pointer to existing capability. Pointers are cheap. Capabilities are expensive.</p>
+      <p>Why the difference? Elicitation doesn't require encoding the capability itself—only a small adjustment or pointer to existing capability. Pointers are cheap. Capabilities are expensive.</p>
     </section>
 
     <h2>A Tale of Two Models</h2>
@@ -1386,7 +1403,7 @@
 
       <p><strong>Result:</strong> The pre-taught model shows elicitation signatures. EDL per token starts low and decreases monotonically. The capacity threshold drops from ~1 bit/parameter to ~0.05 bits/parameter.</p>
 
-      <p>We use the same architecture, same task (natural language arithmetic), and same training procedure, where the only difference is whether the capability was pre-taught.</p>
+      <p>Same architecture. Same task (natural language arithmetic). Same training procedure. The only difference is whether the capability was pre-taught—whether emergence of a relevant capability had already occurred.</p>
 
       <p><strong>Pre-teaching converts a teaching task into an elicitation task.</strong></p>
 
@@ -1400,6 +1417,14 @@
           <span id="intervention-state">Before: Teaching signature</span>
         </div>
       </div>
+
+      <h3>What This Tells Us</h3>
+
+      <p><strong>Emergence of capability during pretraining is the key factor driving the difference in learning signatures. The same model and task can show either teaching or elicitation signatures depending on whether the relevant capability has already emerged.</strong></p>
+
+      <p>The EDL signatures aren't arbitrary correlates of model type. They directly reflect whether the relevant emergent capability is present in the weights.</p>
+
+      <p>When we change whether that capability is present—by pre-teaching, by inducing emergence before we measure—we change the signatures. This causal link validates that elicitation and teaching are about the learning mechanism, not the model's identity. The same model can be in either regime depending on what's being asked and what it already knows.</p>
     </section>
 
     <h2>Parameter Capacity Limits</h2>
@@ -1409,23 +1434,15 @@
 
       <h3>The Capacity Curve</h3>
 
-      <p>Plot the fraction of information full fine-tuning extracts from a dataset (we call this "capacity") against EDL per trainable parameter. You'll see a characteristic shape:</p>
+      <p>When fine-tuning with LoRA (or any parameter-efficient method), plot the fraction of information learned relative to what full fine-tuning extracts from a dataset (we call this "capacity", the ratio of parameter-efficient EDL to maximum EDL) against EDL per trainable parameter, and you'll see a characteristic shape. Below a certain threshold, capacity is approximately 1: the adapter can learn everything the model can learn from the data, and you're not capacity-limited. Above the threshold, capacity drops sharply: the adapter is saturated, and you're trying to store more bits than the parameters can effectively hold.</p>
 
-      <ul>
-        <li><strong>Below threshold:</strong> Capacity ≈ 1. The adapter can learn everything the model can learn from the data. You're not capacity-limited.</li>
-        <li><strong>Above threshold:</strong> Capacity drops sharply. The adapter is saturated. You're trying to store more bits than the parameters can hold.</li>
-      </ul>
-
-      <p>The threshold is the learning capacity limit—the point where learning significantly slows down and parameter-efficient fine-tuning starts to underperform.</p>
+      <p>The threshold is the <em>learning capacity limit</em>—the point where learning significantly slows down and parameter-efficient fine-tuning starts to underperform.</p>
 
       <h3>Learning Capacity Depends on the Learning Regime</h3>
 
-      <p>The learning capacity limit differs by <strong>two orders of magnitude</strong> between elicitation and teaching:</p>
+      <p>The capacity limit EDL/<em>P</em>* differs by two orders of magnitude between elicitation and teaching. For elicitation, it's ~0.01 bits/parameter; for teaching, ~1+ bit/parameter.</p>
 
-      <ul>
-        <li><strong>Elicitation:</strong> ~0.01 bits/parameter</li>
-        <li><strong>Teaching:</strong> ~1+ bit/parameter</li>
-      </ul>
+      <p>This makes intuitive sense through the lens of emergence. For elicitation tasks, the adapter just needs to store a small adjustment—a pointer to capability that emerged during pretraining—when the vast majority of the complexity already exists in the weights. For teaching tasks, the adapter must store the capability itself, encoding the kind of complex, emergent structure that pretraining would normally produce.</p>
 
       <!-- Visualization 7: The Capacity Cliff -->
       <div class="visualization" id="viz-capacity">
@@ -1444,7 +1461,7 @@
 
       <p>Within the elicitation regime, larger models have even lower capacity thresholds. Larger models have more preexisting capability—more latent structure to point to. The "pointer" to this complexity can be even more compact.</p>
 
-      <p>This is counterintuitive: you might expect larger models to need more parameters to fine-tune. But if the capability is latent, the opposite is true. The more the model already knows, the less you need to tell it.</p>
+      <p>This is counterintuitive: you might expect larger models to need more parameters to fine-tune or to store more bits. But if the capability is latent, the opposite is true. The more the model already knows, the less you need to tell it.</p>
 
       <h3>Practical Guidance</h3>
 
@@ -1453,12 +1470,7 @@
       <ol>
         <li><strong>Run a pilot training run.</strong> Fine-tune with high-rank LoRA (or full fine-tuning) on a subset of your data. Compute EDL from the training logs.</li>
         <li><strong>Classify the regime.</strong> Plot EDL per token versus dataset size. Is it decreasing (elicitation) or increasing (teaching)?</li>
-        <li><strong>Estimate required capacity.</strong>
-          <ul>
-            <li><strong>Elicitation:</strong> Choose rank so that EDL/P &lt; 0.1 bits/parameter</li>
-            <li><strong>Teaching:</strong> Choose rank so that EDL/P ~1+ bit/parameter</li>
-          </ul>
-        </li>
+        <li><strong>Estimate required capacity.</strong> For elicitation, choose rank so that EDL/P* < 0.1 bits/parameter. For teaching, choose rank so that EDL/<em>P</em>* ~1+ bit/parameter. Or accept lower capacity (or decrease dataset size) if compute-constrained.</li>
         <li><strong>Validate.</strong> Compare your predicted adapter size to empirical performance. Adjust if needed.</li>
       </ol>
 
@@ -1522,19 +1534,13 @@
 
       <p>For faithful capability assessment, evaluations should target the elicitation regime: use minimal data, monitor for teaching signatures, and verify that results are stable to further training.</p>
 
+      <p>EDL also provides an upper bound estimate on how much capability could have been added. If fine-tuning added X bits of information, we can estimate the complexity of capability that X bits could encode. This helps calibrate how conservative to be about evaluation results.</p>
+
       <h3>For Risk Assessment</h3>
 
       <p>The asymmetry between elicitation and teaching has direct safety implications.</p>
 
-      <p>If a dangerous capability is latent—encoded in the weights during pretraining—it may be surfaced with minimal intervention:</p>
-
-      <ul>
-        <li>A few examples of the undesired behavior</li>
-        <li>A jailbreak prompt that points to existing knowledge</li>
-        <li>A deployment context that accidentally activates latent capability</li>
-      </ul>
-
-      <p>The information barrier is low: potentially just a few bits.</p>
+      <p>The asymmetry between elicitation and teaching has direct safety implications. If a dangerous capability is latent—an emergent phenomenon of pretraining, already encoded in the weights—it may be surfaced with minimal intervention: a few examples of the undesired behavior, a jailbreak prompt that activates existing knowledge, a deployment context that accidentally triggers latent capability. The information barrier is low—potentially just a few bits.</p>
 
       <p>If the capability must be taught, the barrier is substantially higher: orders of magnitude more information, extensive training, and specialized data. This is more predictable and easier to defend against.</p>
 
@@ -1542,11 +1548,13 @@
 
       <h3>For Understanding Reasoning</h3>
 
-      <p>Our analysis of reasoning model distillation (using DeepSeek R1 distilled into Qwen models) shows capacity thresholds characteristic of elicitation: ~0.05 bits/parameter.</p>
+      <p>Our analysis of reasoning model distillation (using DeepSeek R1 distilled into Qwen models) shows behavior characteristic of elicitation: decreasing EDL per token and capacity thresholds of ~0.05 bits/parameter or fewer.</p>
 
       <p>This suggests that chain-of-thought reasoning capabilities may be largely latent in capable base models, waiting to be surfaced through appropriate fine-tuning rather than built from scratch.</p>
 
       <p>This has implications for understanding how reasoning capabilities propagate through the training pipeline, whether expensive RL-based reasoning improvements could be achieved through cheaper elicitation methods, and how well RL may be capable of teaching genuinely new capabilities.</p>
+
+      <p>We would be excited to see research that extends EDL to RL settings and directly investigates information learned by models during RL-based post-training.</p>
 
       <h3>For Efficiency</h3>
 
@@ -1580,18 +1588,27 @@
 
       <p><em>Excess description length</em> measures this compression: the bits that count toward generalization rather than memorization.</p>
 
-      <p>The central thread of this work connects three ideas about scale and complexity. First, Anderson's principle that <em>more is different</em>: scale produces emergence, giving rise to complex capabilities in pretrained models that are qualitatively different from anything present in the individual training examples. Second, our finding that when this emergent complexity already exists, <em>less is all you need</em>: remarkably little information—sometimes a single example, sometimes just a few bits—suffices to surface capabilities that took billions of tokens to create. Third, our finding that when this complexity is absent, <em>more is necessary</em>: there is no shortcut past the information cost of building new emergent structure.</p>
+      <p>The central thread of this work connects three ideas about scale and complexity. First, Anderson's principle that <em>more is different</em>: complexity and scale together produce emergence, giving rise to complex capabilities in pretrained models that are qualitatively different from anything present in the individual training examples. Second, our finding that when this emergent complexity already exists, <em>less is all you need</em>: remarkably little information—sometimes a single example, sometimes just a few bits—suffices to surface capabilities that took billions of tokens to create. Third, our finding that when this complexity is absent, <em>more is necessary</em>: there is no shortcut past the information cost of building new emergent structure.</p>
 
-      <p>EDL gives us a way to measure which regime we're in, and these measurements reveal clear dynamical signatures. Elicitation—surfacing existing emergent capability—produces decreasing EDL per token and capacity thresholds of ~0.01–0.1 bits/parameter. Teaching—building new capability—produces increasing EDL per token and capacity thresholds of ~1 bit/parameter. These signatures are causal: pre-teaching a capability shifts the signature from teaching to elicitation.</p>
+      <p>EDL gives us a way to measure which regime we're in, and these measurements reveal clear dynamical signatures. Elicitation—surfacing existing emergent capability—produces decreasing EDL per token and capacity thresholds of ~0.01–0.1 bits/parameter. Teaching—building new capability—produces increasing EDL per token and capacity thresholds of ~1 bit/parameter. These signatures are causal: pre-teaching a capability shifts the dynamical behavior and learning capacity from teaching-like to elicitation-like.</p>
 
       <p>The practical implications follow directly. For safety evaluations, monitor for teaching signatures to ensure you're measuring what a model knows rather than what it can learn. For risk assessment, recognize that latent capabilities sit behind a thin information barrier. For efficiency, match your training resources to the actual learning regime rather than defaulting to more data and more parameters.</p>
 
-      <p>The framework gives us a language—grounded in information theory—for asking precise questions about how models learn. We hope it proves useful.</p>
+      <p>The framework gives us a language, grounded in information theory, for asking precise questions about how models learn. We hope it proves useful.</p>
     </section>
 
     <div class="footnote">
-      <p><sup>[1]</sup> In practice, hyperparameters like learning rate, batch size, and random seed would also need to be communicated. We assume these are fixed and known to both parties.</p>
-      <p><sup>[2]</sup> The reconstruction is approximate due to floating-point precision, but the principle holds.</p>
+      <p><sup>[1]</sup> This is a simplification. In practice, hyperparameters like learning rate, batch size, optimizer, and random seed would also need to be communicated (we assume these are fixed and known to both parties). But the important insight is that the labels are the dominant information cost.</p>
+      <p><sup>[2]</sup> Assuming deterministic training, which is approximately* true for our purposes. *In reality, the reconstruction is approximate due to floating-point precision and any hardware sources of non-determinism, but the principle holds.</p>
+      <p><sup>[3]</sup> This is online or mini-batch learning, which is standard in practice.</p>
+      <p><sup>[4]</sup> This is a simplified version of the prequential coding scheme from Dawid (1984) and Rissanen (1984).</p>
+      <p><sup>[5]</sup> In principle—some of these complexities may be uncomputable.</p>
+      <p><sup>[6]</sup> This is Kolmogorov complexity, which is defined relative to a choice of universal Turing machine.</p>
+      <p><sup>[7]</sup> "25 blue circles" is shorter than "a red square, a blue circle, a green triangle, and a yellow rhombus."</p>
+      <p><sup>[8]</sup> On a held-out test set of arithmetic problems from the DeepMind Mathematics dataset.</p>
+      <p><sup>[9]</sup> The effective storage capacity of 10 parameters is substantially lower than 160 bits due to redundancy and inefficiency. See also Allen-Zhu & Li (2024), "The Physics of Language Models, Part 3.3: Knowledge Capacity Scaling Laws," who report that models can store roughly 2 bits/parameter of pretrained knowledge.</p>
+      <p><sup>[10]</sup> LoRA commonly uses bfloat16 precision, and we adopt this standard across all of our experiments (including full fine-tuning).</p>
+      <p><sup>[11]</sup> Allen-Zhu & Li (2024), "The Physics of Language Models, Part 3.3: Knowledge Capacity Scaling Laws," https://arxiv.org/abs/2404.05405.</p>
     </div>
   </article>
 
@@ -1688,10 +1705,10 @@
      */
     function generateOneExampleData() {
       return [
-        { model: 'Llama 8B', zero_shot: 0.00, one_shot: 0.96 },
-        { model: 'Llama 3B', zero_shot: 0.00, one_shot: 0.88 },
-        { model: 'Llama 1B', zero_shot: 0.00, one_shot: 0.67 },
-        { model: 'TinyStories', zero_shot: 0.00, one_shot: 0.02 }
+        { model: 'Llama 3.1 8B', zero_shot: 0.01, one_shot: 0.96 },
+        { model: 'Llama 3.2 3B', zero_shot: 0.01, one_shot: 0.88 },
+        { model: 'Llama 3.2 1B', zero_shot: 0.01, one_shot: 0.67 },
+        { model: 'TinyStories-1B', zero_shot: 0.01, one_shot: 0.01 }
       ];
     }
 
