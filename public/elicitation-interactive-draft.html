@@ -380,9 +380,9 @@
     </header>
 
     <section id="introduction">
-      <p>It's unclear what models know.</p>
+      <!-- <p>It's unclear what models know.</p>
 
-      <p>It's hard to get them to show us—they don't just tell us (yet), and we often don't even know the right questions to ask.</p>
+      <p>It's hard to get them to show us—they don't just tell us (yet), and we often don't even know the right questions to ask.</p> -->
 
       <p>Language models are pretrained on vast amounts of diverse data, acquiring capabilities that may remain hidden until the right prompt or training signal surfaces them. We can't enumerate all the capabilities a model might have, and sometimes we can't even anticipate them. Though we've made significant progress—and it's hard to dispute the many practical successes of AI that have been achieved anyway—we still have much to learn about what models know, how they learn, and how capable they might be.</p>
 
@@ -396,7 +396,7 @@
 
       <p><strong>For science:</strong> We largely lack formal descriptions of how models learn. We have heuristics and intuitions, but these are difficult to make predictions from. A quantitative framework for learning dynamics would let us ask—and answer—questions we currently can't even formulate precisely.</p>
 
-      <p>We develop such a framework here, introducing <span class="highlight"><strong>Excess Description Length</strong></span> (EDL) as an operational metric for the generalizable information a model learns from training data. EDL distinguishes teaching from elicitation, tracks transitions between learning mechanisms, and predicts parameter capacity limits for fine-tuning.</p>
+      <p>We develop such a framework here, introducing <span class="highlight"><strong>Excess Description Length</strong></span> (EDL) as an operational metric for the generalizable information a model learns from its training data. EDL distinguishes teaching from elicitation, tracks transitions between learning processes, and predicts parameter capacity limits for fine-tuning.</p>
 
       <!-- <p>EDL offers a more comprehensive framework for evaluating model capabilities and learning, one that also aligns closely with our understanding of human learning and cognition.</p> -->
     </section>
@@ -725,7 +725,7 @@
 
       <!-- <p>Natural language tasks can have many "correct" responses—different phrasings that correspond to the same answer—and the dataset selects one of these as the label. This choice of "ground truth" means that labels are noisy (they don't fully match the true distribution of correct responses), and that loss doesn't always closely track the behaviors we care about.</p> -->
 
-      <p>We want to emphasize that loss and EDL, respectively, measure <em>information</em> and information <em>learned</em> (compression) with respect to a <em>specific distribution</em>; they are not direct measures of <em>capability itself</em>. We measure loss (and EDL) because we hope it tracks well with metrics we <em>do</em> care about for meaningful capability learned, not because it <em>is</em> the metric we care about.</p>
+      <p>We want to emphasize that loss and EDL, respectively, measure <em>information</em> and <em>information learned</em> (compression) with respect to a <em>specific distribution</em>; they are not direct measures of <em>capability itself</em>. We measure loss (and EDL) because we hope it tracks well with metrics we <em>do</em> care about for meaningful capability learned, not because it <em>is</em> the metric we care about.</p>
 
       <p>Despite these limitations, log-loss and EDL remain valuable tools for quantifying learning dynamics and generalization in language models. They provide a consistent framework for measuring how much information a model has absorbed from its training data, even if it doesn't capture every nuance of capability development.</p>
 
@@ -739,11 +739,11 @@
 
       <h3>Emergence in Language Models</h3>
 
-      <p>Emergence is the process by which scale produces complexity. As a model processes more data, it can develop more complex internal representations. These representations can capture abstract patterns and algorithms that are not present in any single training example but emerge from the collective experience of processing many examples.</p>
+      <p>Emergence is the process by which scale produces complexity. As a model processes more data, it can develop more complex internal representations. These representations can capture abstract patterns and algorithms that are not fully encapsulated in any single training example but emerge from the collective of many different ones.</p>
 
       <p>Consider what happens during pretraining. A model processes billions of tokens, each one a local observation: a word following other words. No single token teaches the model arithmetic. No single paragraph teaches it to reason about code, or to translate between languages, or to write poetry. But collectively, at scale, these local patterns give rise to capabilities that are qualitatively different from anything present in any individual training example. The model develops internal representations that capture abstract structure: algorithms, conceptual relationships, reasoning strategies. These are emergent phenomena of the training process—they arise from the collective interaction of vast amounts of data with the model's parameters, and they cannot be understood by examining any single component in isolation.</p>
 
-      <p>This is Anderson's principle, instantiated in a neural network. <em>More is different</em>: more data, more parameters, more computation produce capabilities that are not simply "more of the same" but something qualitatively new.</p>
+      <p>This is Anderson's principle, instantiated in a neural network. <em>More is different</em>: more data, more parameters, more layers, more computation produce capabilities that are not simply "more of the same" but something qualitatively new.</p>
 
       <h3>The Complexity of Capabilities</h3>
 
@@ -855,11 +855,11 @@
 
       <p>Here is where Anderson's principle connects to the central question of this work.</p>
 
-      <p>During pretraining, "more is different": scale produces emergent capabilities—complex internal representations that couldn't exist in a smaller model, a simpler architecture, or with less data. These emergent capabilities have a measurable <em>complexity</em>, an information cost that was paid during pretraining.</p>
+      <p>During pretraining, "more is different": scale and complexity produce emergent capabilities—complex internal representations that couldn't exist in a smaller model, a simpler architecture, or with less data. These emergent capabilities have a measurable <em>complexity</em>, an information cost that was paid during pretraining.</p>
 
       <p>The question we ask is: <em>what happens when we fine-tune?</em> Is the model surfacing complexity that already exists in its weights, or is it building new complexity from scratch?</p>
 
-      <p>When the relevant complexity is already present—when the capability is emergent, if latent—the model doesn't need to reconstruct it. It only needs a small signal that says, in effect, "use <em>this</em> capability for <em>this</em> task." This is <em><strong>elicitation</strong></em>: adapting emergent structure that already exists. The information cost is low, because the complexity was already paid for.</p>
+      <p>When the relevant complexity is already present—when the capability is emergent—the model doesn't need to reconstruct it. It only needs a small signal that says, in effect, "use <em>this</em> capability for <em>this</em> task." This is <em><strong>elicitation</strong></em>: adapting emergent structure that already exists. The information cost is low, because the complexity was already paid for.</p>
 
       <p>When the relevant complexity is absent—when the capability never emerged during pretraining—the model must build it during fine-tuning. It must pay the full information cost of constructing new representations. This is <em><strong>teaching</strong></em>: creating complexity that doesn't yet exist. The information cost is high, because emergence hasn't happened yet.</p>
 
@@ -877,7 +877,7 @@
     <h2>Dynamical Signatures of Elicitation and Teaching</h2>
 
     <section id="signatures">
-      <p>When we plot EDL per token against the number of training examples, we see qualitatively different patterns depending on the dominant learning mechanism at a given dataset size. These patterns tell us something more fundamental than which category of learning is occurring. They tell us how the information economics of learning are changing—whether additional data are becoming more or less valuable at each point in training.</p>
+      <p>When we plot EDL per token against the number of training examples, we see qualitatively different patterns depending on the dominant learning process at a given dataset size. These patterns tell us something more fundamental than which mechanism of learning is occurring. They tell us how the information economics of learning are changing—whether additional data are becoming more or less valuable at each point in training.</p>
 
       <h3>Elicitation: Monotonically Decreasing</h3>
 
@@ -1609,7 +1609,7 @@
         <li>A model might have relevant representations for a capability but face architectural constraints that prevent it from producing outputs that employ them. Is this "latent capability"? From the model's perspective, the knowledge exists but is inaccessible—the distinction between "absent" and "present but blocked" matters for interpretability but not for the information cost of unlocking it.</li>
         <li>A model might have the relevant representations but "choose" not to employ them—because later-trained representations (say, from RLHF) suppress those outputs. Again: the capability exists in some sense, but the information needed to surface it might be nontrivial.</li>
         <li>A sufficiently capable model might learn entirely new patterns from very few examples—not because it has preexisting representations, but because it can reason from first principles or generalize from minimal data. Such a model would show low information requirements that look like elicitation, even though the capability is genuinely new.</li>
-        <li>A model might build significant new capability entirely within its context window or reasoning trace—constructing representations on the fly that no current interpretability method would identify in the weights. The capability doesn't "exist" in the parameters, yet the information cost has been paid—entirely in-context—nonetheless.</li>
+        <li>A model might build significant new capability entirely within its context window or reasoning trace—constructing representations on the fly that no current interpretability method would identify in the weights. The capability doesn't "exist" in the parameters, yet the information cost has been paid nonetheless—entirely in-context.</li>
       </ul>
 
       <p>In all of these cases, what remains well-defined is the <em>information budget</em>: how many bits of additional information—whether delivered through fine-tuning, prompting, or in-context examples—are required for the model to demonstrate the capability? This is the quantity that EDL measures, and it is meaningful regardless of the underlying mechanism.</p>
