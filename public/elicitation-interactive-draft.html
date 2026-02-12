@@ -670,7 +670,7 @@
             <button id="show-edl" class="secondary">Show EDL</button>
             <button id="show-both" class="secondary">Show Both</button>
           </div>
-          <label>Adjust L<sub>test</sub>: <input type="range" id="ltest-slider" min="0.1" max="2" step="0.05" value="0.8"></label>
+          <label>Adjust L<sub>test</sub>: <input type="range" id="ltest-slider" min="0.1" max="3" step="0.05" value="0.8"></label>
           <span id="ltest-display">0.80</span>
         </div>
       </div>
@@ -682,8 +682,8 @@
         <div class="viz-container" id="multi-epoch-chart"></div>
         <div class="viz-controls">
           <button id="epoch-play">Play Training</button>
-          <label>Step: <span id="step-display">0</span> / 1000</label>
-          <input type="range" id="step-slider" min="0" max="1000" value="0" step="10">
+          <label>Step: <span id="step-display">0</span> / 500</label>
+          <input type="range" id="step-slider" min="0" max="500" value="0" step="5">
           <div style="display: flex; gap: 2rem; margin-left: auto;">
             <div style="font-size: 0.85rem;">
               <span style="display: inline-block; width: 12px; height: 12px; background: rgba(232, 155, 126, 0.5); margin-right: 4px; vertical-align: middle;"></span>
@@ -1706,12 +1706,18 @@
      * Represents training loss over first epoch
      */
     function generateMDLData(numSteps = 100) {
+      // Pure exponential decay from 3.0 to ~0.5 over numSteps
+      // 3.0 * exp(-numSteps * k) ≈ 0.5 → k = ln(6)/numSteps
+      const initialLoss = 3.0;
+      const k = Math.log(6) / numSteps;
       const data = [];
-      let loss = 2.5; // Starting loss
+      // Use seeded random for consistency across plots
+      let s = 42;
+      function srand() { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }
       for (let i = 0; i <= numSteps; i++) {
-        data.push({ step: i, loss: loss });
-        // Exponential decay with some noise
-        loss = Math.max(0.3, loss * (0.97 + Math.random() * 0.02) - 0.005);
+        const baseLoss = initialLoss * Math.exp(-k * i);
+        const noise = (srand() - 0.5) * 0.04 * baseLoss; // Small proportional noise
+        data.push({ step: i, loss: Math.max(0.01, baseLoss + noise) });
       }
       return data;
     }
@@ -2119,6 +2125,37 @@
         .attr('fill', colors.darkBlue)
         .text('L_test');
 
+      // Legend
+      const legend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right - 140}, ${margin.top + 5})`);
+
+      // MDL legend item
+      legend.append('rect')
+        .attr('x', 0).attr('y', 0).attr('width', 14).attr('height', 14)
+        .attr('fill', colors.coralLight).attr('opacity', 0.5);
+      legend.append('text')
+        .attr('x', 20).attr('y', 11)
+        .attr('font-size', '11px').attr('fill', '#333')
+        .text('MDL (total area)');
+
+      // EDL legend item
+      legend.append('rect')
+        .attr('x', 0).attr('y', 20).attr('width', 14).attr('height', 14)
+        .attr('fill', colors.coral).attr('opacity', 0.8);
+      legend.append('text')
+        .attr('x', 20).attr('y', 31)
+        .attr('font-size', '11px').attr('fill', '#333')
+        .text('EDL (above L_test)');
+
+      // L_test legend item
+      legend.append('line')
+        .attr('x1', 0).attr('y1', 47).attr('x2', 14).attr('y2', 47)
+        .attr('stroke', colors.darkBlue).attr('stroke-width', 2).attr('stroke-dasharray', '3,3');
+      legend.append('text')
+        .attr('x', 20).attr('y', 51)
+        .attr('font-size', '11px').attr('fill', '#333')
+        .text('L_test');
+
       // View mode state
       let viewMode = 'mdl';
 
@@ -2184,22 +2221,22 @@
       if (!container.node()) return;
 
       const width = container.node().getBoundingClientRect().width;
-      const height = 320;
+      const height = 340;
       const margin = { top: 20, right: 30, bottom: 50, left: 60 };
 
       // Constants
       const stepsPerEpoch = 100;
-      const maxSteps = 1000; // 10 epochs
+      const numEpochs = 5;
+      const maxSteps = stepsPerEpoch * numEpochs; // 500 steps
 
       // Generate first epoch data - this defines MDL (the information in the data)
       const firstEpochData = generateMDLData(stepsPerEpoch);
       const initialLoss = firstEpochData[0].loss;
-      const endOfFirstEpochLoss = firstEpochData[stepsPerEpoch - 1].loss;
-      const minPossibleTrainLoss = endOfFirstEpochLoss * 0.15; // Floor for train loss
+      const endOfFirstEpochLoss = firstEpochData[stepsPerEpoch].loss;
 
       // Pre-generate all training data for consistency
       const allTrainData = [];
-      let seed = 12345;
+      let seed = 99999;
       function seededRandom() {
         seed = (seed * 1103515245 + 12345) & 0x7fffffff;
         return seed / 0x7fffffff;
@@ -2208,13 +2245,47 @@
       // Copy first epoch data
       firstEpochData.forEach(d => allTrainData.push({...d}));
 
-      // Generate subsequent epochs
-      for (let step = stepsPerEpoch; step <= maxSteps; step++) {
-        const epochsComplete = step / stepsPerEpoch;
-        const decay = Math.exp(-epochsComplete * 0.25);
-        const loss = minPossibleTrainLoss + (endOfFirstEpochLoss - minPossibleTrainLoss) * decay;
-        const noise = (seededRandom() - 0.5) * 0.015;
-        allTrainData.push({ step, loss: Math.max(minPossibleTrainLoss, loss + noise) });
+      // Generate subsequent epochs with:
+      // - Bumps at epoch boundaries (shuffled data)
+      // - Continuing decay toward 0 (memorization)
+      // - Small noise
+      for (let step = stepsPerEpoch + 1; step <= maxSteps; step++) {
+        const epoch = Math.floor(step / stepsPerEpoch); // Current epoch (0-indexed)
+        const stepInEpoch = step % stepsPerEpoch;
+
+        // Overall decay: train loss → 0 over multiple epochs (memorization)
+        const globalProgress = step / maxSteps;
+        const overallDecay = endOfFirstEpochLoss * Math.exp(-globalProgress * 6);
+
+        // Bump at epoch boundary: loss spikes briefly at start of each new epoch
+        // (simulates seeing reshuffled data order)
+        let bump = 0;
+        if (stepInEpoch < 15) {
+          const bumpSize = endOfFirstEpochLoss * 0.15 * Math.exp(-epoch * 0.3);
+          bump = bumpSize * Math.exp(-stepInEpoch * 0.25);
+        }
+
+        const noise = (seededRandom() - 0.5) * 0.02 * Math.max(0.05, overallDecay);
+        const loss = Math.max(0.005, overallDecay + bump + noise);
+        allTrainData.push({ step, loss });
+      }
+
+      // Pre-compute test loss for each step
+      // Test loss: during first epoch tracks train loss,
+      // after that improves but with growing gap above train loss
+      const allTestLoss = [];
+      for (let step = 0; step <= maxSteps; step++) {
+        if (step <= stepsPerEpoch) {
+          // During first epoch, test ≈ train
+          allTestLoss.push(allTrainData[step].loss);
+        } else {
+          const epochsAfterFirst = (step - stepsPerEpoch) / stepsPerEpoch;
+          // Test loss improves but slower than train loss
+          // Floor: test loss can't go below some irreducible error
+          const testFloor = endOfFirstEpochLoss * 0.25;
+          const testLoss = testFloor + (endOfFirstEpochLoss - testFloor) * Math.exp(-epochsAfterFirst * 0.6);
+          allTestLoss.push(testLoss);
+        }
       }
 
       const svg = container.append('svg')
@@ -2233,8 +2304,13 @@
       svg.append('g')
         .attr('class', 'axis x-axis')
         .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).tickValues([0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
-          .tickFormat(d => d % 100 === 0 ? `E${d/100}` : ''));
+        .call(d3.axisBottom(x).tickValues([0, 100, 200, 300, 400, 500])
+          .tickFormat(d => `E${d/100}`))
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', 38)
+        .attr('fill', 'currentColor')
+        .text('Epoch');
 
       // Y axis
       svg.append('g')
@@ -2286,6 +2362,22 @@
         .attr('fill', '#999')
         .text('End of dataset');
 
+      // Legend
+      const meLegend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right - 150}, ${margin.top + 5})`);
+      meLegend.append('line')
+        .attr('x1', 0).attr('y1', 7).attr('x2', 18).attr('y2', 7)
+        .attr('stroke', colors.coral).attr('stroke-width', 2);
+      meLegend.append('text')
+        .attr('x', 24).attr('y', 11).attr('font-size', '11px').attr('fill', '#333')
+        .text('Train loss');
+      meLegend.append('line')
+        .attr('x1', 0).attr('y1', 25).attr('x2', 18).attr('y2', 25)
+        .attr('stroke', colors.darkBlue).attr('stroke-width', 2).attr('stroke-dasharray', '5,5');
+      meLegend.append('text')
+        .attr('x', 24).attr('y', 29).attr('font-size', '11px').attr('fill', '#333')
+        .text('Test loss');
+
       // EDL area (area above test loss, UNDER FIRST EPOCH ONLY)
       const edlPath = svg.append('path')
         .attr('fill', colors.coral)
@@ -2305,11 +2397,19 @@
         .attr('stroke', colors.coral)
         .attr('stroke-width', 2);
 
-      // Test loss line (horizontal, decreases with more training)
-      const testLossLine = svg.append('line')
+      // Test loss curve (decreases with more training)
+      const testLossPath = svg.append('path')
+        .attr('fill', 'none')
         .attr('stroke', colors.darkBlue)
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '5,5');
+
+      // Horizontal line at current test loss (extends across chart)
+      const testLossHLine = svg.append('line')
+        .attr('stroke', colors.darkBlue)
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '3,3')
+        .attr('opacity', 0.4);
 
       const testLossLabel = svg.append('text')
         .attr('font-size', '11px')
@@ -2328,24 +2428,6 @@
         .attr('stroke-dasharray', '2,2')
         .attr('opacity', 0.5);
 
-      // Calculate test loss based on training step
-      // Test loss tracks train loss at end of first epoch, then improves
-      function getTestLoss(currentStep) {
-        if (currentStep <= stepsPerEpoch) {
-          // During first epoch, test loss = current train loss
-          return allTrainData[Math.min(currentStep, stepsPerEpoch - 1)].loss;
-        }
-        // After first epoch, test loss improves significantly
-        // It should be clearly lower than end-of-first-epoch train loss
-        const epochsAfterFirst = (currentStep - stepsPerEpoch) / stepsPerEpoch;
-        const improvement = 1 - Math.exp(-epochsAfterFirst * 0.5);
-        const currentTrainLoss = allTrainData[currentStep].loss;
-        // Test loss starts at end of first epoch loss, drops toward a value above train loss
-        const testFloor = currentTrainLoss * 1.05; // Small generalization gap
-        const testLoss = endOfFirstEpochLoss - improvement * (endOfFirstEpochLoss - testFloor);
-        return Math.max(testFloor, testLoss);
-      }
-
       // Calculate totals
       function calculateTotals(currentStep) {
         // MDL is always the sum of losses in first epoch
@@ -2355,7 +2437,7 @@
         }
 
         // EDL = area above test loss in first epoch ONLY
-        const testLoss = getTestLoss(currentStep);
+        const testLoss = allTestLoss[currentStep];
         let edl = 0;
         for (let i = 0; i < firstEpochData.length; i++) {
           if (firstEpochData[i].loss > testLoss) {
@@ -2367,7 +2449,7 @@
       }
 
       function updateVisualization(currentStep) {
-        const testLoss = getTestLoss(currentStep);
+        const testLoss = allTestLoss[currentStep];
         const currentTrainLoss = allTrainData[currentStep].loss;
 
         // Update EDL area - area above test loss under FIRST EPOCH ONLY
@@ -2395,17 +2477,29 @@
         positionMarker.select('line')
           .attr('y2', height - margin.bottom - y(currentTrainLoss));
 
-        // Update test loss line
-        testLossLine
-          .attr('x1', margin.left)
+        // Update test loss curve (show up to current step)
+        if (currentStep > 0) {
+          const testData = [];
+          for (let i = 0; i <= currentStep; i++) {
+            testData.push({ step: i, loss: allTestLoss[i] });
+          }
+          const testLine = d3.line()
+            .x(d => x(d.step))
+            .y(d => y(d.loss));
+          testLossPath.datum(testData).attr('d', testLine);
+        }
+
+        // Horizontal reference line at current test loss
+        testLossHLine
+          .attr('x1', x(currentStep))
           .attr('x2', x(maxSteps))
           .attr('y1', y(testLoss))
           .attr('y2', y(testLoss));
 
         testLossLabel
-          .attr('x', x(maxSteps) - 5)
+          .attr('x', x(currentStep) + 5)
           .attr('y', y(testLoss) - 5)
-          .attr('text-anchor', 'end')
+          .attr('text-anchor', 'start')
           .text(`L_test = ${testLoss.toFixed(2)}`);
 
         // Update totals and display
@@ -2439,7 +2533,7 @@
           playing = true;
 
           playInterval = setInterval(() => {
-            step += 10;
+            step += 5;
             if (step > maxSteps) {
               clearInterval(playInterval);
               playBtn.textContent = 'Play Training';
