@@ -867,6 +867,8 @@
 
       <p>EDL measures this cost. And the scaling of EDL with data reveals which learning mechanism—elicitation or teaching—governs the dynamics we observe.</p>
 
+      <p>In the sections that follow, we frame our findings through the lens of two learning mechanisms: elicitation (surfacing existing capability) and teaching (building new capability). These map naturally onto the way practitioners and safety researchers think about fine-tuning today, and they serve as useful intuition pumps for the kinds of capabilities and models we study here. But we want to be upfront: we think this dichotomy, taken literally, is probably not the fundamental distinction. What ultimately matters is not why a model needs a certain amount of information to demonstrate a capability, but how much information it needs. The teaching/elicitation framework is a useful lens for understanding today's models. The information-theoretic measurement—EDL, expressed in bits—is what will generalize to tomorrow's.</p>
+
       <div class="scale-footnote">
         <p><sup>[*]</sup> Originally "Attention Is All You Need," now a template applied to whatever the speaker believes is the key ingredient.</p>
       </div>
@@ -875,7 +877,7 @@
     <h2>Dynamical Signatures of Elicitation and Teaching</h2>
 
     <section id="signatures">
-      <p>When we plot EDL per token against the number of training examples, we see qualitatively different patterns depending on the dominant learning mechanism at a given dataset size.</p>
+      <p>When we plot EDL per token against the number of training examples, we see qualitatively different patterns depending on the dominant learning mechanism at a given dataset size. These patterns tell us something more fundamental than which category of learning is occurring. They tell us how the information economics of learning are changing—whether additional data are becoming more or less valuable at each point in training.</p>
 
       <h3>Elicitation: Monotonically Decreasing</h3>
 
@@ -1031,6 +1033,8 @@
       <p>Early in training, the model lacks the representations to identify any pattern. Each example is an isolated data point, essentially noise. The model can extract almost no generalizable information. The complexity of the task (and the capabilities required for it) is vastly larger than the amount of information contained in the data received by the model so far.</p>
 
       <p>But as examples accumulate, the model begins to form useful representations. It starts to see the patterns in the data. Each new example makes the data more informative as a <em>whole</em>, because the model can now recognize patterns in earlier examples that it previously missed. The model is learning how to learn from this data.</p>
+
+      <p>What matters here is not the label "teaching" per se, but the measurable fact that each example effectively compresses more bits of the dataset than the last—the information cost of this capability is being paid incrementally as increasing complexity is absorbed.</p>
 
       <!-- Teaching cartoon: shapes and colors pattern learning with backfilling -->
       <div class="illustration">
@@ -1286,6 +1290,8 @@
       <p>This means learning can also go the other direction. A model that starts in an elicitation regime—with a latent capability—might later encounter examples that reveal new structure it hadn't encoded. EDL per token would start increasing again. Teaching would resume.</p>
 
       <p>The signatures track the dynamics of learning without requiring any information about the training history.</p>
+
+      <p>This relativity is one reason why the teaching/elicitation distinction, taken as a hard binary, can be misleading. What remains invariant across all these framings is the information measurement: how much does the model's generalization improve per bit of information received? This is what EDL tracks, and it is well-defined regardless of the reference point or what we call the learning process—whether that's "elicitation", "teaching", or something in between.</p>
     </section>
 
     <h2>Less Is All You Need (...<em>Sometimes</em>)</h2>
@@ -1523,6 +1529,32 @@
       </div>
     </section>
 
+    <h2>Dynamics and Equilibria: Two Views of Learning</h2>
+
+    <section id="dynamics-equilibria">
+
+    <p>The dynamical signatures and capacity thresholds we've described are both useful, but they measure different things—roughly, the <em>path</em> and the <em>destination</em>.</p>
+
+    <p>The dynamical signatures describe a non-equilibrium process: what's happening in learning <em>right now</em>. At each point in training, they answer the question: is each new example making the dataset <em>synergistically</em> more informative (the model can now extract more from previous examples than it could before) or <em>redundantly</em> more informative (the model already knows most of what the new example conveys)? This is a property of the learning trajectory, and like any trajectory, it's sensitive to the forces acting on it—optimizer, learning rate, schedule. A near-zero learning rate, for instance, could make genuinely synergistic data look redundant by preventing the model from updating enough to exploit the new information. This is why careful hyperparameter search matters: we want the dynamics to reflect the information structure of the task, not artifacts of under-optimization.</p>
+
+    <p>The capacity thresholds describe an equilibrium state: where does the system end up when it runs out of learning capacity? When the adapter saturates, how much information has it absorbed per parameter? Low information density at saturation (~0.01 bits/parameter) means the adapter needed to store only a small adjustment—a pointer to structure that already existed. High density (~1 bit/parameter) means the adapter encoded substantial new structure. This is a property of the endpoint, and it's more robust to the path taken to get there.</p>
+
+    <p>Which measurement matters depends on what you want to know.</p>
+
+    <p>When you care about whether an evaluation procedure is starting to build new capability—whether your elicitation is drifting into territory where the model is learning from the eval rather than being assessed by it—the dynamical signatures are the right diagnostic. They can detect the onset of synergistic learning even before it shows up in the capacity curves.</p>
+
+    <p>When you care about whether a given model and compute budget could support building significant new capability—whether there's enough parameter capacity to store the complexity required—the thresholds are more directly informative.</p>
+
+    <!-- <p>When you care about how much information a model needs to learn a capability—whether you're trying to estimate the information budget for teaching a dangerous capability, or whether your parameter-efficient fine-tuning method has enough capacity to capture the task—the capacity thresholds are the right diagnostic. They give you a concrete number to work with: if your adapter can store 0.1 bits/parameter but the task requires 1 bit/parameter, you know you're in trouble.</p> -->
+
+    <p>And the dynamical signatures reveal structure that the capacity thresholds alone would miss. Consider a task that is genuinely new to the model but low in complexity—a simple function with low sample complexity that the model has never encountered. Because the task is simple, the model can encode it in relatively few parameters, and the capacity curve saturates well below 1 bit/parameter—an equilibrium that looks identical to elicitation because there's very little information to learn. But the dynamics tell a different story: below the sample complexity, each new example produces a larger marginal improvement in generalization than the last, the signature of synergistic learning. The model is building something new; it's just building something small.</p>
+
+    <p>But more fundamental than either measurement is the quantity they both serve: <em>how much total information did the model learn?</em> This is what EDL measures directly. The dynamical signatures tell you whether that information is accumulating synergistically or redundantly. The capacity thresholds tell you whether the adapter has room to store it. But what ultimately determines risk, efficiency, and safety is the total information budget—how many bits of additional information are required to bring the model to demonstrate a given capability—and whether that number falls above or below the threshold you've set for your particular use case.</p>
+
+    <p><em>Note: The synergistic/redundant framing connects back to "more is different" at the level of the training data itself. In the synergistic regime, the collective dataset is literally more informative than the sum of its individual examples—each example's contribution depends on the others, and the whole is different from the sum of its parts. In the redundant regime, examples are largely interchangeable, and the whole is well-approximated by a small subset. The same principle of emergence operates at the level of how data informs learning, not just how parameters compose into capabilities.</em></p>
+
+    </section>
+
     <h2>Implications</h2>
 
     <section id="implications">
@@ -1561,12 +1593,59 @@
       <p>Many practitioners over-train on elicitation tasks. If your capability is latent, massive datasets and high-rank adapters are wasteful. Our results suggest that for elicitation, ranks 1–8 often suffice to attain maximum performance, and a few hundred examples may be enough. For teaching, high-rank adapters and large datasets are necessary. EDL provides a principled way to distinguish these cases <em>before</em> committing to expensive training runs.</p>
     </section>
 
+    <h2>Beyond the Dichotomy</h2>
+
+    <section id="beyond-dichotomy">
+
+      <h3>What Actually Matters</h3>
+
+      <p>We've framed this work in terms of two learning processes: elicitation and teaching. This framing is useful—it captures real structure in the data, it maps onto how practitioners think, and it provides actionable guidance for today's models. But we want to be honest about its limits.</p>
+
+      <p>The teaching/elicitation distinction is, in the end, a dichotomy imposed on what is really a continuum. Real learning often involves a mixture of both mechanisms in varying proportions. The dynamical signatures reveal the predominant process, not a clean binary. And as models and training methods evolve, the dichotomy may become less useful.</p>
+
+      <p>Consider several situations where the binary framing struggles:</p>
+
+      <ul>
+        <li>A model might have relevant representations for a capability but face architectural constraints that prevent it from producing outputs that employ them. Is this "latent capability"? From the model's perspective, the knowledge exists but is inaccessible—the distinction between "absent" and "present but blocked" matters for interpretability but not for the information cost of unlocking it.</li>
+        <li>A model might have the relevant representations but "choose" not to employ them—because later-trained representations (say, from RLHF) suppress those outputs. Again: the capability exists in some sense, but the information needed to surface it might be nontrivial.</li>
+        <li>A sufficiently capable model might learn entirely new patterns from very few examples—not because it has preexisting representations, but because it can reason from first principles or generalize from minimal data. Such a model would show low information requirements that look like elicitation, even though the capability is genuinely new.</li>
+        <li>A model might build significant new capability entirely within its context window or reasoning trace—constructing representations on the fly that no current interpretability method would identify in the weights. The capability doesn't "exist" in the parameters, yet the information cost has been paid—entirely in-context—nonetheless.</li>
+      </ul>
+
+      <p>In all of these cases, what remains well-defined is the <em>information budget</em>: how many bits of additional information—whether delivered through fine-tuning, prompting, or in-context examples—are required for the model to demonstrate the capability? This is the quantity that EDL measures, and it is meaningful regardless of the underlying mechanism.</p>
+
+      <!-- <p>Future work could explore more nuanced characterizations of learning dynamics, including hybrid regimes where elicitation and teaching interact, or settings where different components of a capability are latent versus absent.</p> -->
+
+      <h3>From Mechanisms to Measurements</h3>
+
+      <p>We think the right way to read our results is not "teaching and elicitation are fundamentally different processes" but rather "the information cost of demonstrating a capability varies enormously depending on what the model already knows, and EDL gives us a way to measure it."</p>
+
+      <p>Teaching and elicitation are useful names for the regimes where information cost is high and low, respectively. The dynamical signatures reliably identify which process dominates. And the framework extends naturally beyond fine-tuning: the same information-theoretic lens applies to prompting, in-context learning, and (in principle) chain-of-thought reasoning. Bits are a universal currency. Whether they arrive through gradient updates or through tokens in a context window, they carry the same information.</p>
+
+      <p>This reframing has a practical consequence that we think is important.</p>
+
+      <h3>Information Budgets for Safety</h3>
+
+      <p>Current safety frameworks often ask categorical questions: <em>Does the model have this dangerous capability?</em> Our results suggest a more informative question: <em>How much additional information would it take for the model to demonstrate this capability?</em></p>
+
+      <p>This reframing turns a binary classification problem into a quantitative measurement—and quantitative measurements can be tied to quantitative thresholds.</p>
+
+      <p>Here's how this could work in practice. Suppose we're concerned about a specific dangerous capability—say, the ability to provide expert-level guidance on synthesizing a harmful compound. We can estimate the information budget available to the most capable adversaries we want to defend against: how much fine-tuning data could they plausibly assemble? How much compute do they have? What quality of examples could they produce?</p>
+
+      <p>This gives us a number—an information budget, measured in bits—that characterizes the threat. If EDL measurements show that the model can be brought to demonstrate the capability with less information than this budget, the capability is within the adversary's reach, and we need additional safeguards (stronger guardrails, restricting model access, or escalating to higher safety levels like ASL-4). If the model requires more information than the budget allows, the capability is beyond the adversary's practical reach—at least through fine-tuning.</p>
+
+      <p>More concretely: if we want, say, 99% confidence that a given class of adversary cannot elicit a particular capability, we set the information budget at the level available to the top 1% most-resourced actors in that class. Models that demonstrate the capability below that threshold require additional protections. Models that don't are safer by this metric.</p>
+
+      <p>This approach has several advantages over categorical assessments. It's <em>quantitative</em>: instead of "the model can/can't do X," we get "the model can do X with Y bits of additional information." It's <em>calibrated to threat models</em>: different adversaries have different resources, and the framework accommodates this naturally. It's <em>comparable across models</em>: we can track how information requirements change across model generations. And it's <em>grounded in measurement</em>: EDL provides an empirical anchor rather than relying on subjective assessments of whether a capability is "latent" or "absent."</p>
+
+      <p>We don't claim this is a complete safety framework. Estimating adversary information budgets is itself a hard problem, and the relationship between bits of fine-tuning information and real-world harm is complex. But we believe this direction—tying safety decisions to quantitative thresholds on information cost rather than to categorical judgments about capability presence—is more robust and more actionable than the alternative.</p>
+
     <h2>Caveats and Nuances</h2>
 
     <section id="caveats">
       <p>We emphasize several limitations and subtleties.</p>
 
-      <p><strong>The boundary is fuzzy.</strong> Elicitation and teaching are useful abstractions, but real learning probably involves both mechanisms in varying proportions. The signatures reveal the <em>predominant</em> mechanism, not a strict dichotomy.</p>
+      <p><strong>The boundary is fuzzy.</strong> Elicitation and teaching are useful abstractions, but real learning likely involves both mechanisms in varying proportions. The signatures reveal the <em>predominant</em> mechanism, not a strict dichotomy.</p>
 
       <p><strong>What we measure is learning efficiency, not model cognition.</strong> We don't claim a mechanistically interpretable understanding of what representations exist or how they change during elicitation versus teaching. We observe that different amounts of information produce different amounts of generalization, and that this varies systematically with pretraining.</p>
 
