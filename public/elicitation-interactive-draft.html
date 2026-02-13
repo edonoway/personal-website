@@ -199,6 +199,17 @@
 
     .toggle-group button {
       border-radius: 0;
+      background: var(--cream-dark);
+      color: var(--text);
+    }
+
+    .toggle-group button:hover {
+      background: var(--border);
+    }
+
+    .toggle-group button.active {
+      background: var(--coral);
+      color: white;
     }
 
     .toggle-group button:first-child {
@@ -367,6 +378,109 @@
       h2 { font-size: 1.4rem; }
       .calculator { grid-template-columns: 1fr; }
       .viz-controls { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* Backfill visualization */
+    .backfill-viz .bf-slider-container {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--cream-dark);
+      border-radius: 8px;
+    }
+    .backfill-viz .bf-slider-container label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #444;
+    }
+    .backfill-viz .bf-slider-container input[type="range"] {
+      width: 260px;
+      margin: 0 10px;
+      vertical-align: middle;
+    }
+    .backfill-viz .bf-slider-container .bf-count {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--dark-blue);
+      min-width: 2ch;
+      display: inline-block;
+    }
+    .backfill-viz .bf-panels {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 1rem;
+    }
+    .backfill-viz .bf-panel {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+    .backfill-viz .bf-panel h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .backfill-viz .bf-panel.teaching h4 { color: #6a3d9a; }
+    .backfill-viz .bf-panel.elicitation h4 { color: #1a8a6a; }
+    .backfill-viz .bf-panel svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .backfill-viz .bf-metrics {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 0.6rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid #eee;
+    }
+    .backfill-viz .bf-metric {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #666;
+    }
+    .backfill-viz .bf-metric .bf-value {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--dark-blue);
+      margin-top: 2px;
+    }
+    .backfill-viz .bf-metric .bf-trend {
+      font-size: 0.72rem;
+      margin-top: 1px;
+    }
+    .backfill-viz .bf-metric .bf-trend.up { color: #6a3d9a; }
+    .backfill-viz .bf-metric .bf-trend.down { color: #1a8a6a; }
+    .backfill-viz .bf-legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      font-size: 0.78rem;
+      color: #555;
+      flex-wrap: wrap;
+    }
+    .backfill-viz .bf-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .backfill-viz .bf-legend-swatch {
+      width: 13px;
+      height: 13px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .backfill-viz .bf-axis-line { stroke: #ccc; stroke-width: 1; }
+    .backfill-viz .bf-tick-label { font-size: 9px; fill: #999; }
+    .backfill-viz .bf-axis-title { font-size: 11px; fill: #666; font-weight: 500; }
+    .backfill-viz .bf-floor-line { stroke: #aaa; stroke-width: 1; stroke-dasharray: 2,2; opacity: 0.6; }
+    .backfill-viz .bf-test-loss-label { font-size: 9px; fill: #888; }
+    @media (max-width: 700px) {
+      .backfill-viz .bf-panels { flex-direction: column; }
     }
   </style>
 </head>
@@ -667,8 +781,8 @@
         <div class="viz-controls">
           <div class="toggle-group">
             <button id="show-mdl" class="active">Show MDL</button>
-            <button id="show-edl" class="secondary">Show EDL</button>
-            <button id="show-both" class="secondary">Show Both</button>
+            <button id="show-edl">Show EDL</button>
+            <button id="show-both">Show Both</button>
           </div>
           <label>Adjust L<sub>test</sub>: <input type="range" id="ltest-slider" min="0.1" max="3" step="0.05" value="0.8"></label>
           <span id="ltest-display">0.80</span>
@@ -679,21 +793,27 @@
       <div class="visualization" id="viz-multi-epoch">
         <div class="viz-title">Training as Information Extraction</div>
         <div class="viz-subtitle">The dataset is an information source (MDL). Training extracts generalizable information (EDL). More epochs can increase extraction, but can't add information beyond what's in the data.</div>
+        <div style="display: flex; justify-content: center; gap: 3rem; margin: 0.75rem 0; padding: 0.6rem 1.5rem; background: #f8f6f3; border-radius: 8px;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">MDL (bits in data)</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.2rem;">
+              <span style="display: inline-block; width: 14px; height: 14px; background: rgba(232, 155, 126, 0.5); border-radius: 2px;"></span>
+              <span id="mdl-total" style="font-size: 1.6rem; font-weight: 600; color: #c07050; font-variant-numeric: tabular-nums;">0</span>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em;">EDL (bits learned)</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.2rem;">
+              <span style="display: inline-block; width: 14px; height: 14px; background: #D97757; border-radius: 2px;"></span>
+              <span id="edl-total" style="font-size: 1.6rem; font-weight: 600; color: #D97757; font-variant-numeric: tabular-nums;">0</span>
+            </div>
+          </div>
+        </div>
         <div class="viz-container" id="multi-epoch-chart"></div>
         <div class="viz-controls">
           <button id="epoch-play">Play Training</button>
           <label>Step: <span id="step-display">0</span> / 500</label>
           <input type="range" id="step-slider" min="0" max="500" value="0" step="5">
-          <div style="display: flex; gap: 2rem; margin-left: auto;">
-            <div style="font-size: 0.85rem;">
-              <span style="display: inline-block; width: 12px; height: 12px; background: rgba(232, 155, 126, 0.5); margin-right: 4px; vertical-align: middle;"></span>
-              MDL (bits in data): <span id="mdl-total" class="metric-display" style="font-size: 1rem;">0</span>
-            </div>
-            <div style="font-size: 0.85rem;">
-              <span style="display: inline-block; width: 12px; height: 12px; background: #D97757; margin-right: 4px; vertical-align: middle;"></span>
-              EDL (bits learned): <span id="edl-total" class="metric-display" style="font-size: 1rem;">0</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -883,7 +1003,7 @@
 
       <p>For models with latent capabilities, EDL per token decreases monotonically as we add training examples.</p>
 
-      <p>The first example may be highly informative, aligning a model's outputs to the desired response format and reducing uncertainty about which of its capabilities are relevant for the task ("Oh, you want me to output numbers in this format for arithmetic problems"). But subsequent examples add less and less. The model already knows arithmetic; additional examples just confirm what it already knows. There is no new algorithmic information to be learned.</p>
+      <p>The first example may be highly informative, aligning a model's outputs to the desired response format and reducing uncertainty about which of its capabilities are relevant for the task. ("Oh, you want me to output numbers in this format for arithmetic problems.") But subsequent examples add less and less. The model already knows arithmetic; additional examples just confirm what it already knows. There is no new algorithmic information to be learned.</p>
 
       <!-- Elicitation cartoon: uncertainty collapse with specific hypotheses -->
       <div class="illustration">
@@ -1024,17 +1144,19 @@
         <p class="illustration-caption">Elicitation: The model knows many things about "23+45." The first example collapses uncertainty about which capability to use. Additional examples provide diminishing information because the distribution is already near the target.</p>
       </div>
 
-      <p>This is the EDL signature of elicitation: <em>diminishing returns to data</em>. Each example provides less marginal information than the previous one.</p>
+      <p>This EDL signature of diminishing returns is associated with elicitation: each example provides less marginal information than the last. The data are redundant—each new example is approximately interchangeable with any other, and the sum of their contributions is well-approximated by any small subset.</p>
 
       <h3>Teaching: Monotonically Increasing</h3>
 
-      <p>When models learn new capabilities, EDL per token <em>increases</em> as we add examples.</p>
+      <p>When models learn new capabilities—when emergence is happening during fine-tuning—EDL per token <em>increases</em> as we add examples.</p>
 
-      <p>Early in training, the model lacks the representations to identify any pattern. Each example is an isolated data point, essentially noise. The model can extract almost no generalizable information. The complexity of the task (and the capabilities required for it) is vastly larger than the amount of information contained in the data received by the model so far.</p>
+      <p>Early in training, the model lacks the representations to identify any pattern. Each example is an isolated data point, essentially noise. The model can extract almost no generalizable information. The complexity of the task (and the capabilities required for it) is vastly larger than the amount of information contained in the data the model has received so far.</p>
 
-      <p>But as examples accumulate, the model begins to form useful representations. It starts to see the patterns in the data. Each new example makes the data more informative as a <em>whole</em>, because the model can now recognize patterns in earlier examples that it previously missed. The model is learning how to learn from this data.</p>
+      <p>But as examples accumulate, the model begins to form useful representations. It starts to see structure in the data. Each new example doesn't just add one more fact—it makes the entire dataset more informative as a <em>whole</em>, because the model can now recognize patterns in earlier examples that it previously missed. The model is learning how to learn from this data.</p>
 
-      <p>What matters here is not the label "teaching" per se, but the measurable fact that each example effectively compresses more bits of the dataset than the last—the information cost of this capability is being paid incrementally as increasing complexity is absorbed.</p>
+      <p>This EDL signature of increasing returns is associated with teaching: each example enables the extraction of more information from all previous examples. The data are <em>synergistic</em>—the collective dataset is more informative than the sum of its individual examples, and each new example amplifies the value of the whole. This is emergence at the level of how data informs learning: the whole is different than the sum of its parts.</p>
+
+      <p>What matters here is not the label "teaching" per se, but the measurable fact that each example effectively compresses more bits of the training dataset than the last. The information cost of this capability is being paid incrementally as increasing complexity is absorbed from the data.</p>
 
       <!-- Teaching cartoon: shapes and colors pattern learning with backfilling -->
       <div class="illustration">
@@ -1238,9 +1360,9 @@
         <p class="illustration-caption">Teaching builds new representations. The key insight: Example 3 doesn't just add information—it retroactively makes Examples 1 and 2 understandable. This "backfilling" is why EDL per label token increases during teaching.</p>
       </div>
 
-      <p>This is the EDL signature of teaching: <em>increasing returns to data</em>. Each example enables extraction of more information from all previous examples.</p>
+      <!-- <p>This is the EDL signature of teaching: <em>increasing returns to data</em>. Each example enables extraction of more information from all previous examples.</p> -->
 
-      <!-- Visualization 3: The Two Signatures -->
+            <!-- Visualization 3: The Two Signatures -->
       <div class="visualization" id="viz-signatures">
         <div class="viz-title">The Two Signatures</div>
         <div class="viz-subtitle">Compare how EDL per token scales with dataset size for elicitation (Llama 3.2 1B) vs teaching (TinyStories-1B) when we fine-tune on multiplication problems from the DeepMind Mathematics dataset.</div>
@@ -1250,9 +1372,110 @@
             <button id="sig-llama" class="active">Llama (Elicitation)</button>
             <button id="sig-tiny" class="active">TinyStories (Teaching)</button>
           </div>
-          <button id="sig-overlay" class="secondary">Toggle Overlay</button>
+
         </div>
       </div>
+
+      <h3>Visualizing the Backfilling Effect</h3>
+
+      <p>The geometry behind synergistic and redundant learning is surprisingly simple.</p>
+
+      <p>EDL at any point in training equals the area between what the model paid (the train loss on each example before the update) and what the model would pay now (the current test loss, applied to all examples). Think of this as a set of bars—one per training example—each extending from the test loss floor up to the train loss the model incurred on that example.</p>
+
+      <p>When the model learns from a new example and test loss drops, something notable happens: <em>the floor drops for all previous examples simultaneously</em>. Every previous bar extends, not just the new one. This retroactive extension is the backfilling effect, and it's why EDL can grow faster than linearly.</p>
+
+      <div class="visualization backfill-viz" id="viz-backfill">
+        <div class="viz-title">The Backfilling Effect</div>
+        <div class="viz-subtitle">Each bar represents one training example. When new learning drops the test loss floor, all previous bars extend retroactively. Drag the slider to add examples and watch the bars grow.</div>
+        <div class="bf-slider-container">
+          <label>
+            Training examples:
+            <input type="range" id="bf-slider" min="0" max="20" value="0" step="1">
+            <span class="bf-count" id="bf-count">0</span> / 20
+          </label>
+        </div>
+        <div class="bf-panels">
+          <div class="bf-panel teaching">
+            <h4>Synergistic Learning (Teaching)</h4>
+            <svg id="bf-svg-teaching" viewBox="0 0 480 320"></svg>
+            <div class="bf-metrics">
+              <div class="bf-metric">
+                <span>Total EDL</span>
+                <span class="bf-value" id="bf-edl-teaching">0.00 bits</span>
+              </div>
+              <div class="bf-metric">
+                <span>EDL / token</span>
+                <span class="bf-value" id="bf-edl-per-token-teaching">—</span>
+                <span class="bf-trend up" id="bf-trend-teaching"></span>
+              </div>
+              <div class="bf-metric">
+                <span>Marginal EDL</span>
+                <span class="bf-value" id="bf-marginal-teaching">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="bf-panel elicitation">
+            <h4>Redundant Learning (Elicitation)</h4>
+            <svg id="bf-svg-elicitation" viewBox="0 0 480 320"></svg>
+            <div class="bf-metrics">
+              <div class="bf-metric">
+                <span>Total EDL</span>
+                <span class="bf-value" id="bf-edl-elicitation">0.00 bits</span>
+              </div>
+              <div class="bf-metric">
+                <span>EDL / token</span>
+                <span class="bf-value" id="bf-edl-per-token-elicitation">—</span>
+                <span class="bf-trend down" id="bf-trend-elicitation"></span>
+              </div>
+              <div class="bf-metric">
+                <span>Marginal EDL</span>
+                <span class="bf-value" id="bf-marginal-elicitation">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bf-legend">
+          <div class="bf-legend-item">
+            <div class="bf-legend-swatch" style="background: #2d9c6f;"></div>
+            <span>Direct compression</span>
+          </div>
+          <div class="bf-legend-item">
+            <div class="bf-legend-swatch" style="background: #6a3d9a;"></div>
+            <span>Marginal backfill (this step)</span>
+          </div>
+          <div class="bf-legend-item">
+            <div class="bf-legend-swatch" style="background: #c4b0e0;"></div>
+            <span>Accumulated backfill (previous)</span>
+          </div>
+          <div class="bf-legend-item">
+            <div class="bf-legend-swatch" style="background: none; border: 1.5px dashed #888; width: 18px; height: 0; border-radius: 0; align-self: center;"></div>
+            <span>Test loss floor</span>
+          </div>
+        </div>
+        <div style="margin-top: 0.75rem; font-size: 0.82rem; line-height: 1.55; color: #555;">
+          <p style="margin-bottom: 0.5rem;"><strong style="color: #6a3d9a;">Synergistic learning (<em>left</em>):</strong> When the model learns from a new example and the test loss floor drops, <em>all previous bars extend simultaneously</em>. The dark purple band shows the marginal backfill from the most recent step — it appears on every previous bar at once. The light purple shows accumulated backfill from all prior steps. Retroactive compression dominates: the collective dataset is more informative than the sum of its parts. Once again, <em>more</em> is <em>different.</em></p>
+          <p style="margin-bottom: 0.5rem;"><strong style="color: #1a8a6a;">Redundant learning (<em>right</em>):</strong> The floor drops rapidly at first, then barely at all. The marginal backfill band shrinks quickly — later examples barely extend previous bars. Each example is approximately independent.</p>
+          <p><em>In both cases, EDL equals the total shaded area. The backfilling effect—the retroactive extension of all previous bars when new learning occurs—is why EDL can grow superlinearly, and why each new example can contribute more effective information than it itself contains.</em></p>
+        </div>
+      </div>
+
+      <p>In synergistic learning, the floor drops at a steady rate, so the backfill on each previous example grows with every new example—and there are more previous examples to backfill onto with each step. The marginal contribution to EDL from the <em>m</em>-th example is not just the compression of that example, but the retroactive improvement on all <em>m–1</em> previous examples. Total EDL grows superlinearly.</p>
+
+      <p>In redundant learning, the floor drops rapidly at first and then barely at all. Early examples produce large backfills, but later examples produce almost none. The marginal contribution to EDL shrinks. Total EDL grows but decelerates.</p>
+
+      <!-- Visualization 3: The Two Signatures
+      <div class="visualization" id="viz-signatures">
+        <div class="viz-title">The Two Signatures</div>
+        <div class="viz-subtitle">Compare how EDL per token scales with dataset size for elicitation (Llama 3.2 1B) vs teaching (TinyStories-1B) when we fine-tune on multiplication problems from the DeepMind Mathematics dataset.</div>
+        <div class="viz-container" id="signatures-chart"></div>
+        <div class="viz-controls">
+          <div class="toggle-group">
+            <button id="sig-llama" class="active">Llama (Elicitation)</button>
+            <button id="sig-tiny" class="active">TinyStories (Teaching)</button>
+          </div>
+
+        </div>
+      </div> -->
 
       <h3>Crossovers in Learning</h3>
 
@@ -1289,9 +1512,7 @@
 
       <p>This means learning can also go the other direction. A model that starts in an elicitation regime—with a latent capability—might later encounter examples that reveal new structure it hadn't encoded. EDL per token would start increasing again. Teaching would resume.</p>
 
-      <p>The signatures track the dynamics of learning without requiring any information about the training history.</p>
-
-      <p>This relativity is one reason why the teaching/elicitation distinction, taken as a hard binary, can be misleading. What remains invariant across all these framings is the information measurement: how much does the model's generalization improve per bit of information received? This is what EDL tracks, and it is well-defined regardless of the reference point or what we call the learning process—whether that's "elicitation", "teaching", or something in between.</p>
+      <p>The signatures track the dynamics of learning without requiring any information about the model's previous training history. And this relativity is one reason why the teaching/elicitation distinction, taken as a hard binary, can be misleading. What remains invariant across all these framings is the information measurement: how much does the model's generalization improve per bit of information received? This is what EDL tracks, and it is well-defined regardless of the reference point or what we call the learning process—whether that's "elicitation", "teaching", or something in between.</p>
     </section>
 
     <h2>Less Is All You Need (...<em>Sometimes</em>)</h2>
@@ -1467,7 +1688,7 @@
 
       <p>Within the elicitation regime, larger models have even lower capacity thresholds. Larger models have more preexisting capability—more latent structure to point to. The "pointer" to this complexity can be even more compact.</p>
 
-      <p>This is counterintuitive: you might expect larger models to need more parameters to fine-tune or to store more bits. But if the capability is latent, the opposite is true. The more the model already knows, the less you need to tell it.</p>
+      <p>This is counterintuitive: you might expect larger models to need more parameters to fine-tune or to absorb more bits during training. But if the capability is latent, the opposite is true. The more the model already knows, the less you need to tell it.</p>
 
       <h3>Practical Guidance</h3>
 
@@ -2061,12 +2282,23 @@
       svg.append('g')
         .attr('class', 'axis')
         .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).ticks(10));
+        .call(d3.axisBottom(x).ticks(10))
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', 35)
+        .attr('fill', 'currentColor')
+        .text('Training Step');
 
       svg.append('g')
         .attr('class', 'axis')
         .attr('transform', `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(5));
+        .call(d3.axisLeft(y).ticks(5))
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -45)
+        .attr('fill', 'currentColor')
+        .text('Loss (nats)');
 
       // MDL area (full area under curve)
       const mdlArea = d3.area()
@@ -2119,11 +2351,12 @@
 
       const lTestLabel = svg.append('text')
         .attr('x', width - margin.right - 5)
-        .attr('y', y(lTest) - 5)
+        .attr('y', y(lTest) - 12)
         .attr('text-anchor', 'end')
         .attr('font-size', '12px')
-        .attr('fill', colors.darkBlue)
-        .text('L_test');
+        .attr('fill', colors.darkBlue);
+      lTestLabel.append('tspan').text('L');
+      lTestLabel.append('tspan').attr('baseline-shift', 'sub').attr('font-size', '0.7em').text('test');
 
       // Legend
       const legend = svg.append('g')
@@ -2142,19 +2375,22 @@
       legend.append('rect')
         .attr('x', 0).attr('y', 20).attr('width', 14).attr('height', 14)
         .attr('fill', colors.coral).attr('opacity', 0.8);
-      legend.append('text')
+      const edlLegendText = legend.append('text')
         .attr('x', 20).attr('y', 31)
-        .attr('font-size', '11px').attr('fill', '#333')
-        .text('EDL (above L_test)');
+        .attr('font-size', '11px').attr('fill', '#333');
+      edlLegendText.append('tspan').text('EDL (above L');
+      edlLegendText.append('tspan').attr('baseline-shift', 'sub').attr('font-size', '0.7em').text('test');
+      edlLegendText.append('tspan').attr('baseline-shift', 'baseline').attr('font-size', '11px').text(')');
 
       // L_test legend item
       legend.append('line')
         .attr('x1', 0).attr('y1', 47).attr('x2', 14).attr('y2', 47)
         .attr('stroke', colors.darkBlue).attr('stroke-width', 2).attr('stroke-dasharray', '3,3');
-      legend.append('text')
+      const lTestLegendText = legend.append('text')
         .attr('x', 20).attr('y', 51)
-        .attr('font-size', '11px').attr('fill', '#333')
-        .text('L_test');
+        .attr('font-size', '11px').attr('fill', '#333');
+      lTestLegendText.append('tspan').text('L');
+      lTestLegendText.append('tspan').attr('baseline-shift', 'sub').attr('font-size', '0.7em').text('test');
 
       // View mode state
       let viewMode = 'mdl';
@@ -2167,7 +2403,7 @@
       function updateLTest(newLTest) {
         lTest = newLTest;
         lTestLine.attr('y1', y(lTest)).attr('y2', y(lTest));
-        lTestLabel.attr('y', y(lTest) - 5);
+        lTestLabel.attr('y', y(lTest) - 12);
 
         const edlAreaUpdated = d3.area()
           .x(d => x(d.step))
@@ -2245,28 +2481,36 @@
       // Copy first epoch data
       firstEpochData.forEach(d => allTrainData.push({...d}));
 
-      // Generate subsequent epochs with:
-      // - Bumps at epoch boundaries (shuffled data)
-      // - Continuing decay toward 0 (memorization)
-      // - Small noise
+      // Generate subsequent epochs with stepwise decay:
+      // Each epoch starts high (bump from reshuffled data), decays within the epoch,
+      // then the next epoch starts from a lower baseline.
+      // This creates a visible staircase pattern.
+      const epochStartLoss = [endOfFirstEpochLoss]; // loss at start of each post-first epoch
+      for (let e = 1; e <= numEpochs; e++) {
+        // Each epoch reduces the baseline by a factor
+        epochStartLoss.push(epochStartLoss[e - 1] * 0.55);
+      }
+
       for (let step = stepsPerEpoch + 1; step <= maxSteps; step++) {
         const epoch = Math.floor(step / stepsPerEpoch); // Current epoch (0-indexed)
         const stepInEpoch = step % stepsPerEpoch;
+        const t = stepInEpoch / stepsPerEpoch; // 0-1 progress within epoch
 
-        // Overall decay: train loss → 0 over multiple epochs (memorization)
-        const globalProgress = step / maxSteps;
-        const overallDecay = endOfFirstEpochLoss * Math.exp(-globalProgress * 6);
+        // This epoch's start and end loss levels
+        const startLoss = epochStartLoss[epoch - 1]; // where this epoch starts (with bump)
+        const endLoss = epochStartLoss[epoch];        // where it settles by end of epoch
 
-        // Bump at epoch boundary: loss spikes briefly at start of each new epoch
-        // (simulates seeing reshuffled data order)
+        // Within-epoch decay: fast initial drop, then flattens
+        const withinEpochLoss = endLoss + (startLoss - endLoss) * Math.exp(-t * 4);
+
+        // Small bump at epoch boundary (reshuffled data)
         let bump = 0;
-        if (stepInEpoch < 15) {
-          const bumpSize = endOfFirstEpochLoss * 0.15 * Math.exp(-epoch * 0.3);
-          bump = bumpSize * Math.exp(-stepInEpoch * 0.25);
+        if (stepInEpoch < 10) {
+          bump = startLoss * 0.15 * Math.exp(-stepInEpoch * 0.4);
         }
 
-        const noise = (seededRandom() - 0.5) * 0.02 * Math.max(0.05, overallDecay);
-        const loss = Math.max(0.005, overallDecay + bump + noise);
+        const noise = (seededRandom() - 0.5) * 0.015 * Math.max(0.02, withinEpochLoss);
+        const loss = Math.max(0.005, withinEpochLoss + bump + noise);
         allTrainData.push({ step, loss });
       }
 
@@ -2373,7 +2617,7 @@
         .text('Train loss');
       meLegend.append('line')
         .attr('x1', 0).attr('y1', 25).attr('x2', 18).attr('y2', 25)
-        .attr('stroke', colors.darkBlue).attr('stroke-width', 2).attr('stroke-dasharray', '5,5');
+        .attr('stroke', '#000').attr('stroke-width', 2).attr('stroke-dasharray', '6,4');
       meLegend.append('text')
         .attr('x', 24).attr('y', 29).attr('font-size', '11px').attr('fill', '#333')
         .text('Test loss');
@@ -2397,23 +2641,15 @@
         .attr('stroke', colors.coral)
         .attr('stroke-width', 2);
 
-      // Test loss curve (decreases with more training)
-      const testLossPath = svg.append('path')
-        .attr('fill', 'none')
-        .attr('stroke', colors.darkBlue)
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', '5,5');
-
-      // Horizontal line at current test loss (extends across chart)
+      // Horizontal line at current test loss (extends full width)
       const testLossHLine = svg.append('line')
-        .attr('stroke', colors.darkBlue)
-        .attr('stroke-width', 1)
-        .attr('stroke-dasharray', '3,3')
-        .attr('opacity', 0.4);
+        .attr('stroke', '#000')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '6,4');
 
       const testLossLabel = svg.append('text')
         .attr('font-size', '11px')
-        .attr('fill', colors.darkBlue);
+        .attr('fill', '#000');
 
       // Current position marker
       const positionMarker = svg.append('g');
@@ -2477,30 +2713,21 @@
         positionMarker.select('line')
           .attr('y2', height - margin.bottom - y(currentTrainLoss));
 
-        // Update test loss curve (show up to current step)
-        if (currentStep > 0) {
-          const testData = [];
-          for (let i = 0; i <= currentStep; i++) {
-            testData.push({ step: i, loss: allTestLoss[i] });
-          }
-          const testLine = d3.line()
-            .x(d => x(d.step))
-            .y(d => y(d.loss));
-          testLossPath.datum(testData).attr('d', testLine);
-        }
-
-        // Horizontal reference line at current test loss
+        // Horizontal test loss line spanning full chart width
         testLossHLine
-          .attr('x1', x(currentStep))
-          .attr('x2', x(maxSteps))
+          .attr('x1', margin.left)
+          .attr('x2', width - margin.right)
           .attr('y1', y(testLoss))
           .attr('y2', y(testLoss));
 
         testLossLabel
-          .attr('x', x(currentStep) + 5)
-          .attr('y', y(testLoss) - 5)
-          .attr('text-anchor', 'start')
-          .text(`L_test = ${testLoss.toFixed(2)}`);
+          .attr('x', width - margin.right - 5)
+          .attr('y', y(testLoss) - 12)
+          .attr('text-anchor', 'end');
+        testLossLabel.selectAll('tspan').remove();
+        testLossLabel.append('tspan').text('L');
+        testLossLabel.append('tspan').attr('baseline-shift', 'sub').attr('font-size', '0.7em').text('test');
+        testLossLabel.append('tspan').attr('baseline-shift', 'baseline').attr('font-size', '11px').text(` = ${testLoss.toFixed(2)}`);
 
         // Update totals and display
         const totals = calculateTotals(currentStep);
@@ -2650,14 +2877,14 @@
         .on('mouseout', hideTooltip);
 
       // Annotations
-      svg.append('text')
+      const llamaLabel = svg.append('text')
         .attr('x', x(3))
         .attr('y', y(0.55))
         .attr('font-size', '12px')
         .attr('fill', colors.blue)
         .text('Llama (Elicitation)');
 
-      svg.append('text')
+      const tinyLabel = svg.append('text')
         .attr('x', x(500))
         .attr('y', y(0.48))
         .attr('font-size', '12px')
@@ -2671,8 +2898,10 @@
       function updateVisibility() {
         llamaPath.attr('opacity', showLlama ? 1 : 0);
         llamaPoints.attr('opacity', showLlama ? 1 : 0);
+        llamaLabel.attr('opacity', showLlama ? 1 : 0);
         tinyPath.attr('opacity', showTiny ? 1 : 0);
         tinyPoints.attr('opacity', showTiny ? 1 : 0);
+        tinyLabel.attr('opacity', showTiny ? 1 : 0);
       }
 
       document.getElementById('sig-llama').addEventListener('click', function() {
@@ -3337,6 +3566,209 @@
     }
 
     // ============================================================
+    // VISUALIZATION: BACKFILL EFFECT
+    // ============================================================
+
+    function initBackfillVisualization() {
+      const BF_N = 20;
+      const BF_COLORS = {
+        direct: '#2d9c6f',
+        marginalBackfill: '#6a3d9a',
+        accumBackfill: '#c4b0e0'
+      };
+
+      function teachingTestLoss(m) {
+        return Math.max(1.0 - m * 0.048, 0.04);
+      }
+
+      function elicitationTestLoss(m) {
+        return 0.04 + 0.96 * Math.exp(-0.7 * m);
+      }
+
+      function bfTrainLoss(testLossFn, i) {
+        return testLossFn(i - 1);
+      }
+
+      function computeEDL(testLossFn, m) {
+        if (m === 0) return {
+          bars: [], totalEDL: 0, edlPerToken: 0, marginalEDL: 0,
+          testLoss: testLossFn(0), prevTestLoss: testLossFn(0)
+        };
+
+        const currentTestLoss = testLossFn(m);
+        const prevTestLoss = m > 0 ? testLossFn(m - 1) : testLossFn(0);
+        const deltaTestLoss = Math.max(prevTestLoss - currentTestLoss, 0);
+
+        const bars = [];
+        let totalEDL = 0;
+
+        for (let i = 1; i <= m; i++) {
+          const tl = bfTrainLoss(testLossFn, i);
+          const testAtI = testLossFn(i);
+          const direct = Math.max(tl - testAtI, 0);
+          const totalBackfill = Math.max(testAtI - currentTestLoss, 0);
+
+          let marginalBf, accumBf;
+          if (i < m) {
+            marginalBf = Math.min(deltaTestLoss, totalBackfill);
+            accumBf = Math.max(totalBackfill - marginalBf, 0);
+          } else {
+            marginalBf = 0;
+            accumBf = 0;
+          }
+
+          const total = direct + totalBackfill;
+          bars.push({ index: i, trainLoss: tl, direct, accumBackfill: accumBf, marginalBackfill: marginalBf, total });
+          totalEDL += total;
+        }
+
+        let prevEDL = 0;
+        if (m > 1) {
+          for (let i = 1; i <= m - 1; i++) {
+            const tl = bfTrainLoss(testLossFn, i);
+            const testAtI = testLossFn(i);
+            const direct = Math.max(tl - testAtI, 0);
+            const backfill = Math.max(testAtI - prevTestLoss, 0);
+            prevEDL += direct + backfill;
+          }
+        }
+
+        return { bars, totalEDL, edlPerToken: totalEDL / m, marginalEDL: totalEDL - prevEDL, testLoss: currentTestLoss, prevTestLoss };
+      }
+
+      const BF_MARGIN = { top: 25, right: 20, bottom: 35, left: 50 };
+      const BF_WIDTH = 480, BF_HEIGHT = 320;
+      const BF_CHART_W = BF_WIDTH - BF_MARGIN.left - BF_MARGIN.right;
+      const BF_CHART_H = BF_HEIGHT - BF_MARGIN.top - BF_MARGIN.bottom;
+      const BF_BAR_GAP = 3;
+      const BF_BAR_W = (BF_CHART_W / BF_N) - BF_BAR_GAP;
+      const BF_Y_MAX = 1.05;
+
+      function bfYScale(val) { return BF_MARGIN.top + BF_CHART_H * (1 - val / BF_Y_MAX); }
+      function bfXScale(i) { return BF_MARGIN.left + (i - 1) * (BF_BAR_W + BF_BAR_GAP) + BF_BAR_GAP / 2; }
+
+      function bfCreateEl(tag, attrs) {
+        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+        return el;
+      }
+
+      function bfDrawAxes(svg) {
+        svg.appendChild(bfCreateEl('line', { x1: BF_MARGIN.left, y1: BF_MARGIN.top, x2: BF_MARGIN.left, y2: BF_MARGIN.top + BF_CHART_H, class: 'bf-axis-line' }));
+        svg.appendChild(bfCreateEl('line', { x1: BF_MARGIN.left, y1: BF_MARGIN.top + BF_CHART_H, x2: BF_MARGIN.left + BF_CHART_W, y2: BF_MARGIN.top + BF_CHART_H, class: 'bf-axis-line' }));
+
+        for (let v = 0; v <= 1.0; v += 0.2) {
+          const yy = bfYScale(v);
+          svg.appendChild(bfCreateEl('line', { x1: BF_MARGIN.left - 4, y1: yy, x2: BF_MARGIN.left, y2: yy, class: 'bf-axis-line' }));
+          const label = bfCreateEl('text', { x: BF_MARGIN.left - 8, y: yy + 3.5, 'text-anchor': 'end', class: 'bf-tick-label' });
+          label.textContent = v.toFixed(1);
+          svg.appendChild(label);
+        }
+
+        const yTitle = bfCreateEl('text', { x: 14, y: BF_MARGIN.top + BF_CHART_H / 2, 'text-anchor': 'middle', class: 'bf-axis-title', transform: `rotate(-90, 14, ${BF_MARGIN.top + BF_CHART_H / 2})` });
+        yTitle.textContent = 'Bits';
+        svg.appendChild(yTitle);
+
+        const xTitle = bfCreateEl('text', { x: BF_MARGIN.left + BF_CHART_W / 2, y: BF_HEIGHT - 4, 'text-anchor': 'middle', class: 'bf-axis-title' });
+        xTitle.textContent = 'Training example';
+        svg.appendChild(xTitle);
+
+        [1, 5, 10, 15, 20].forEach(i => {
+          const xx = bfXScale(i) + BF_BAR_W / 2;
+          const label = bfCreateEl('text', { x: xx, y: BF_MARGIN.top + BF_CHART_H + 14, 'text-anchor': 'middle', class: 'bf-tick-label' });
+          label.textContent = i;
+          svg.appendChild(label);
+        });
+      }
+
+      function bfDrawBars(svg, data) {
+        svg.querySelectorAll('.bf-bar-direct, .bf-bar-accum, .bf-bar-marginal, .bf-floor-line, .bf-test-loss-label')
+          .forEach(el => el.remove());
+
+        if (data.bars.length === 0) return;
+
+        const floorY = bfYScale(data.testLoss);
+        svg.appendChild(bfCreateEl('line', { x1: BF_MARGIN.left, y1: floorY, x2: BF_MARGIN.left + BF_CHART_W, y2: floorY, class: 'bf-floor-line' }));
+
+        const floorLabel = bfCreateEl('text', { x: BF_MARGIN.left + BF_CHART_W + 2, y: floorY + 3, class: 'bf-test-loss-label' });
+        floorLabel.textContent = `L=${data.testLoss.toFixed(2)}`;
+        svg.appendChild(floorLabel);
+
+        data.bars.forEach(bar => {
+          const xx = bfXScale(bar.index);
+          const directH = (bar.direct / BF_Y_MAX) * BF_CHART_H;
+          const accumBfH = (bar.accumBackfill / BF_Y_MAX) * BF_CHART_H;
+          const margBfH = (bar.marginalBackfill / BF_Y_MAX) * BF_CHART_H;
+
+          let cursor = floorY;
+
+          if (margBfH > 0.3) {
+            cursor -= margBfH;
+            svg.appendChild(bfCreateEl('rect', { x: xx, y: cursor, width: BF_BAR_W, height: margBfH, fill: BF_COLORS.marginalBackfill, opacity: '0.9', rx: '1', class: 'bf-bar-marginal' }));
+          }
+          if (accumBfH > 0.3) {
+            cursor -= accumBfH;
+            svg.appendChild(bfCreateEl('rect', { x: xx, y: cursor, width: BF_BAR_W, height: accumBfH, fill: BF_COLORS.accumBackfill, opacity: '0.85', rx: '1', class: 'bf-bar-accum' }));
+          }
+          if (directH > 0.3) {
+            cursor -= directH;
+            svg.appendChild(bfCreateEl('rect', { x: xx, y: cursor, width: BF_BAR_W, height: directH, fill: BF_COLORS.direct, opacity: '0.9', rx: '1', class: 'bf-bar-direct' }));
+          }
+        });
+      }
+
+      const svgT = document.getElementById('bf-svg-teaching');
+      const svgE = document.getElementById('bf-svg-elicitation');
+      if (!svgT || !svgE) return;
+
+      bfDrawAxes(svgT);
+      bfDrawAxes(svgE);
+
+      function bfUpdate(m) {
+        const teachData = computeEDL(teachingTestLoss, m);
+        const elicitData = computeEDL(elicitationTestLoss, m);
+
+        bfDrawBars(svgT, teachData);
+        bfDrawBars(svgE, elicitData);
+
+        document.getElementById('bf-edl-teaching').textContent = teachData.totalEDL.toFixed(2) + ' bits';
+        document.getElementById('bf-edl-elicitation').textContent = elicitData.totalEDL.toFixed(2) + ' bits';
+
+        if (m > 0) {
+          document.getElementById('bf-edl-per-token-teaching').textContent = teachData.edlPerToken.toFixed(3) + ' bits';
+          document.getElementById('bf-edl-per-token-elicitation').textContent = elicitData.edlPerToken.toFixed(3) + ' bits';
+          document.getElementById('bf-marginal-teaching').textContent = teachData.marginalEDL.toFixed(3) + ' bits';
+          document.getElementById('bf-marginal-elicitation').textContent = elicitData.marginalEDL.toFixed(3) + ' bits';
+        } else {
+          document.getElementById('bf-edl-per-token-teaching').textContent = '—';
+          document.getElementById('bf-edl-per-token-elicitation').textContent = '—';
+          document.getElementById('bf-marginal-teaching').textContent = '—';
+          document.getElementById('bf-marginal-elicitation').textContent = '—';
+        }
+
+        if (m >= 2) {
+          const prevTeach = computeEDL(teachingTestLoss, m - 1);
+          const prevElicit = computeEDL(elicitationTestLoss, m - 1);
+          const teachTrend = teachData.edlPerToken > prevTeach.edlPerToken;
+          const elicitTrend = elicitData.edlPerToken > prevElicit.edlPerToken;
+          document.getElementById('bf-trend-teaching').textContent = teachTrend ? '↑ increasing' : '↓ decreasing';
+          document.getElementById('bf-trend-teaching').className = 'bf-trend ' + (teachTrend ? 'up' : 'down');
+          document.getElementById('bf-trend-elicitation').textContent = elicitTrend ? '↑ increasing' : '↓ decreasing';
+          document.getElementById('bf-trend-elicitation').className = 'bf-trend ' + (elicitTrend ? 'up' : 'down');
+        } else {
+          document.getElementById('bf-trend-teaching').textContent = '';
+          document.getElementById('bf-trend-elicitation').textContent = '';
+        }
+
+        document.getElementById('bf-count').textContent = m;
+      }
+
+      const bfSlider = document.getElementById('bf-slider');
+      bfSlider.addEventListener('input', () => bfUpdate(parseInt(bfSlider.value)));
+      bfUpdate(0);
+    }
+
+    // ============================================================
     // VISUALIZATION 8: ADAPTER SIZE CALCULATOR
     // ============================================================
 
@@ -3494,6 +3926,7 @@
       initOneExampleVisualization();
       initInterventionVisualization();
       initCapacityVisualization();
+      initBackfillVisualization();
       initCalculator();
     });
   </script>
